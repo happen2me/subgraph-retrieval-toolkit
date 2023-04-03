@@ -7,8 +7,8 @@ python preprocess/search_path.py --ground-path data/retrieval/grounded.jsonl --o
 """
 import sys
 import os
-
 import argparse
+
 import srsly
 from tqdm import tqdm
 
