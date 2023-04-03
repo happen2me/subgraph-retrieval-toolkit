@@ -38,18 +38,20 @@ def main(args):
     ground_samples = srsly.read_jsonl(args.ground_path)
     total_samples = sum(1 for _ in srsly.read_jsonl(args.ground_path))
 
-    # TODO: implement wikidata knowledge graph
-    kg = Wikidata(args.wikidata_endpoint)
+    wikidata = Wikidata(args.wikidata_endpoint)
     processed_samples = []
     skipped = 0
     for sample in tqdm(ground_samples, total=total_samples):
         question_entities = sample['question_entities']
         answer_entities = sample['answer_entities']
         try:
-            paths = generate_paths(question_entities, answer_entities, kg)
+            paths = generate_paths(question_entities, answer_entities, wikidata)
         except Exception as e:
             skipped += 1
             print(e)
+            continue
+        if args.remove_sample_without_path and not paths:
+            skipped += 1
             continue
         sample['paths'] = paths
         processed_samples.append(sample)
@@ -63,6 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('--wikidata-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='wikidata endpoint')
     parser.add_argument('--ground-path', type=str, required=True, help='grounded file where the question and answer entities are stored')
     parser.add_argument('--output-path', type=str, required=True, help='path file where several paths for each sample stored')
+    parser.add_argument('--remove-sample-without-path', action='store_true', help='remove samples without paths')
     args = parser.parse_args()
 
     main(args)

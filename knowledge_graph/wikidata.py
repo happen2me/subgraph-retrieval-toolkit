@@ -40,18 +40,35 @@ class Wikidata:
         return result
 
     def search_one_hop_relation(self, src, dst):
-        """Search one hop relation between src and dst."""
+        """Search one hop relation between src and dst.
+        
+        Args:
+            src (str): source entity
+            dst (str): destination entity
+        
+        Returns:
+            list[list[str]]: list of paths, each path is a list of PIDs
+        """
         query = f"""
             SELECT DISTINCT ?r WHERE {{
                 wd:{src} ?r wd:{dst}.
             }}
             """
         paths = self.queryWikidata(query)
-        paths = [get_pid_from_uri(path['r']['value']) for path in paths]
+        # Keep only PIDs in the paths
+        paths = [[get_pid_from_uri(path['r']['value'])] for path in paths]
         return paths
 
     def search_two_hop_relation(self, src, dst):
-        """Search two hop relation between src and dst."""
+        """Search two hop relation between src and dst.
+        
+        Args:
+            src (str): source entity
+            dst (str): destination entity
+        
+        Returns:
+            list[list[str]]: list of paths, each path is a list of PIDs
+        """
         query = f"""
             SELECT DISTINCT ?r1 ?r2 WHERE {{
                 wd:{src} ?r1 ?x.
@@ -59,7 +76,43 @@ class Wikidata:
             }}
             """
         paths = self.queryWikidata(query)
+        # Keep only PIDs in the paths
         paths = [[get_pid_from_uri(path['r1']['value']),
                   get_pid_from_uri(path['r2']['value'])]
                  for path in paths]
         return paths
+
+    def deduce_leaves(self, src, path):
+        """Deduce leave entities from source entity following the path.
+        
+        Args:
+            src_entity (str): source entity
+            path (list[str]): path from source entity to destination entity
+        
+        Returns:
+            list[str]: list of leaves. Each leaf is a QID.
+        """
+        assert len(path) < 3, f'Currenly only support paths with length less than 3, got {len(path)}'
+        if len(path) == 0:
+            return [src]
+        if len(path) == 1:
+            query = f"""
+                SELECT DISTINCT ?x WHERE {{
+                    wd:{src} wdt:{path[0]} ?x.
+                    }}
+                LIMIT 2000
+            """
+        else: # len(path) == 2
+            query = f"""
+                SELECT DISTINCT ?x WHERE {{
+                    wd:{src} wdt:{path[0]} ?y.
+                    ?y wdt:{path[1]} ?x.
+                }}
+                LIMIT 2000
+            """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+        leaves = self.queryWikidata(query)
+        # Keep only QIDs in the leaves
+        leaves = [leaf['x']['value'].split('/')[-1] for leaf in leaves]
+        return leaves
