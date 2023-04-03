@@ -38,6 +38,7 @@ def main(args):
     print(f'Processed {len(processed_samples)} samples, skipped {skipped} samples, total {total_lines} samples')
     print(f'Output saved to {output_path}')
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, default='', help='dataset name, which will be prepend to sample ids')
