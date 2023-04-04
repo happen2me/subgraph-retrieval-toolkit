@@ -1,20 +1,27 @@
 import torch
 import lightning.pytorch as pl
 from transformers import AutoModel
-from pytorch_metric_learning import losses
+from pytorch_metric_learning.losses import NTXentLoss
 
 
 def average_pool(last_hidden_states, attention_mask):
+    """Average pool the sentence embedding
+    Ref: huggingface.co/intfloat/e5-large
+    """
     last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
     return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
 
 
 class LitSentenceEncoder(pl.LightningModule):
+    """Lightning module """
     def __init__(self, model_name_or_path, temperature=0.07):
         super().__init__()
         self.model = AutoModel.from_pretrained(model_name_or_path)
         self.config = self.model.config
-        self.loss_fn = losses.NTXentLoss(temperature=temperature)
+        self.loss_fn = NTXentLoss(temperature=temperature)
+
+    def __cal__(self, *args, **kwargs):
+        self.model(*args, **kwargs)
 
     def training_step(self, batch, batch_idx):
         # batch = {'input_ids': input_ids, 'attention_mask': attention_mask}
