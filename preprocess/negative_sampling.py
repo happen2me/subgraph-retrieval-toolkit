@@ -7,7 +7,8 @@ negative instances to optimize the probability of the observed ones.
 e.g.
 python preprocess/negative_sampling.py \
     --scored-path-file data/retrieval/paths_scored.jsonl \
-    --output-file data/retrieval/train.csv
+    --output-file data/retrieval/train_.jsonl\
+    --wikidata-endpoint https://query.wikidata.org/sparql
 """
 import os
 import sys
@@ -156,22 +157,27 @@ def convert_records_relation_id_to_lable(records, wikidata):
     return processed_records
 
 
-def write_records_to_csv(records, output_file):
-    """Write records to a csv file. Per the original implementation, each record is saved as a line:
-    question [SEP] prev_path separated by #, positive_relation, negative_relation1, negative_relation2, ...
+def create_jsonl_dataset(records):
+    """It combines the question and prev_path to query. Each train sample is a dict with the following fields:
+    - query (str): question + prev_path
+    - positive (str): the next relation of the prev_path is regarded as the positive relation
+    - negatives (list): a list of negative relations
     
     Args:
         records (list[dict]): list of records
-        output_file (str): output file path
+        
+    Returns:
+        list[dict]: list of train samples
     """
-    with open(output_file, 'w', encoding='utf-8') as f:
-        for record in records:
-            question = record['question']
-            prev_path = ' # '.join(record['prev_path'])
-            positive_relation = record['positive_relation']
-            negative_relations = ','.join(record['negative_relations'])
-            line = f"{question} [SEP] {prev_path}, {positive_relation}, {negative_relations}"
-            f.write(line + '\n')
+    samples = []
+    for record in records:
+        sample = {
+            'query': record['question'] + ' [SEP] ' + ' # '.join(record['prev_path']),
+            'positive': record['positive_relation'],
+            'negatives': record['negative_relations']
+        }
+        samples.append(sample)
+    return samples
 
 
 def main(args):
@@ -205,7 +211,8 @@ def main(args):
                                                           positive_connections, wikidata))
     print(f"Number of training records: {len(train_records)}")
     train_records = convert_records_relation_id_to_lable(train_records, wikidata)
-    write_records_to_csv(train_records, args.output_file)
+    train_records = create_jsonl_dataset(train_records)
+    srsly.write_jsonl(args.output_file, train_records)
     print(f"Saved to {args.output_file}")
 
 
