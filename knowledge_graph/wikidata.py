@@ -1,4 +1,4 @@
-from .knowledge_graph import KnowledgeGraph
+from functools import lru_cache
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 
@@ -82,12 +82,13 @@ class Wikidata:
                  for path in paths]
         return paths
 
-    def deduce_leaves(self, src, path):
+    def deduce_leaves(self, src, path, limit=2000):
         """Deduce leave entities from source entity following the path.
         
         Args:
             src_entity (str): source entity
             path (list[str]): path from source entity to destination entity
+            limit (int, optional): limit of the number of leaves. Defaults to 2000.
         
         Returns:
             list[str]: list of leaves. Each leaf is a QID.
@@ -100,7 +101,7 @@ class Wikidata:
                 SELECT DISTINCT ?x WHERE {{
                     wd:{src} wdt:{path[0]} ?x.
                     }}
-                LIMIT 2000
+                LIMIT {limit}
             """
         else: # len(path) == 2
             query = f"""
@@ -108,7 +109,7 @@ class Wikidata:
                     wd:{src} wdt:{path[0]} ?y.
                     ?y wdt:{path[1]} ?x.
                 }}
-                LIMIT 2000
+                LIMIT {limit}
             """
         if self.prepend_prefixes:
             query = self.PREFIXES + query
@@ -116,3 +117,103 @@ class Wikidata:
         # Keep only QIDs in the leaves
         leaves = [leaf['x']['value'].split('/')[-1] for leaf in leaves]
         return leaves
+
+    def deduce_leaves_from_multiple_srcs(self, srcs, path, limit=2000):
+        """Deuce leave entities from multiple source entities following the path.
+
+        Args:
+            srcs (list[str]): list of source entities
+            path (list[str]): path from source entity to destination entity
+            limit (int, optional): limit of the number of leaves. Defaults to 200.
+
+        Returns:
+            list[str]: list of leaves. Each leaf is a QID.
+        """
+        assert len(path) < 2, f'Currenly only support paths with length less than 2, got {len(path)}'
+        if len(path) == 0:
+            return srcs
+        # len(path) == 1
+        query = f"""
+            SELECT DISTINCT ?x WHERE {{
+                VALUES ?src {{wd:{' wd:'.join(srcs)}}}
+                ?src wdt:{path[0]} ?x.
+                    }}
+            LIMIT {limit}
+            """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+        leaves = self.queryWikidata(query)
+        # Keep only QIDs in the leaves
+        leaves = [leaf['x']['value'].split('/')[-1] for leaf in leaves]
+        return leaves
+
+    @lru_cache
+    def get_relations(self, src, hop=1, limit=100):
+        """Get all relations connected to an entity. The relations are
+        limited to direct relations (those with wdt: prefix).
+
+        Args:
+            src (str): source entity
+            hop (int, optional): hop of the relations. Defaults to 1.
+            limit (int, optional): limit of the number of relations. Defaults to 100.
+
+        Returns:
+            list[str] | list[tuple(str,)]: list of relations. Each relation is a PID or a tuple of PIDs.
+        """
+        assert hop < 3, f'Currenly only support relations with hop less than 3, got {hop}'
+        if hop == 1:
+            query = f"""SELECT ?rel WHERE {{
+                wd:{src} ?rel ?obj .
+                FILTER(REGEX(STR(?rel), "^http://www.wikidata.org/prop/direct/"))
+                }}
+                LIMIT {limit}
+                """
+        else: # hop == 2
+            query = f"""SELECT ?rel1, ?rel2 WHERE {{
+                wd:{src} ?rel1 ?obj .
+                ?obj ?rel2 ?obj2 .
+                FILTER(REGEX(STR(?rel1), "^http://www.wikidata.org/prop/direct/"))
+                FILTER(REGEX(STR(?rel2), "^http://www.wikidata.org/prop/direct/"))
+                }}
+                LIMIT {limit}
+                """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+
+        relations = self.queryWikidata(query)
+        if hop == 1:
+            relations = [get_pid_from_uri(relation['rel']['value'])
+                         for relation in relations]
+        else:
+            relations = [(get_pid_from_uri(relation['rel1']['value']),
+                          get_pid_from_uri(relation['rel2']['value']))
+                         for relation in relations]
+        return relations
+
+    @lru_cache
+    def get_relation_label(self, relation):
+        """Get label of a relation.
+
+        Args:
+            relation (str): relation, a PID
+
+        Returns:
+            str: label of the relation
+        """
+        query = f"""
+            SELECT ?label
+                WHERE {{
+                    BIND(wd:{relation} AS ?property)
+                    ?property rdfs:label ?label .
+                    FILTER(LANG(?label) = "en")
+                    }}
+                LIMIT 1
+            """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+        label = self.queryWikidata(query)
+        if len(label) == 0:
+            print(f'No label for relation {relation}.')
+            return None
+        label = label[0]['label']['value']
+        return label
