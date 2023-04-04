@@ -45,8 +45,11 @@ def sample_negative_relations(soruce_entities, prev_path, positive_connections,
         if len(negative_relations) > 100:  # yet another magic number :(
             break
     negative_relations = negative_relations - positive_connections[tuple(prev_path)]
+    if len(negative_relations) == 0:
+        return []
     negative_relations = random.choices(list(negative_relations), k=num_negative)
     return negative_relations
+
 
 def is_candidate_space_too_large(path, question_entities, wikidata, candidate_depth_multiplier=10):
     """Check whether the number of the candidate entities along the path is too large.
@@ -75,6 +78,7 @@ def is_candidate_space_too_large(path, question_entities, wikidata, candidate_de
             break
     return flag_too_large
 
+
 def sample_records_from_path(path, question, question_entities, positive_connections,
                              wikidata, num_negative=15):
     """Sample training records from a path.
@@ -100,6 +104,8 @@ def sample_records_from_path(path, question, question_entities, positive_connect
         prev_path = path[:i]
         negative_relations = sample_negative_relations(tracked_entities, prev_path, positive_connections,
                                                        num_negative, wikidata)
+        if len(negative_relations) == 0:
+            continue
         record = {
             'question': question,
             'prev_path': prev_path,
@@ -111,6 +117,7 @@ def sample_records_from_path(path, question, question_entities, positive_connect
             # update tracked entities
             tracked_entities = wikidata.deduce_leaves_from_multiple_srcs(tracked_entities, [current_relation], limit=100)
     return records
+
 
 def get_positive_connections_along_paths(paths, path_scores, positive_threshold):
     """Collect positive connections along paths. A positive connection is defined as
@@ -127,6 +134,7 @@ def get_positive_connections_along_paths(paths, path_scores, positive_threshold)
         for i, rel in enumerate(path):
             positive_connections[tuple(path[:i])].add(rel)
     return positive_connections
+
 
 def convert_records_relation_id_to_lable(records, wikidata):
     """Convert relation ids to relation labels in each record.
@@ -145,6 +153,7 @@ def convert_records_relation_id_to_lable(records, wikidata):
         processed_records.append(record)
     return processed_records
 
+
 def write_records_to_csv(records, output_file):
     """Write records to a csv file. Per the original implementation, each record is saved as a line:
     question [SEP] prev_path separated by #, positive_relation, negative_relation1, negative_relation2, ...
@@ -161,6 +170,7 @@ def write_records_to_csv(records, output_file):
             negative_relations = ','.join(record['negative_relations'])
             line = f"{question} [SEP] {prev_path}, {positive_relation}, {negative_relations}"
             f.write(line + '\n')
+
 
 def main(args):
     wikidata = Wikidata(args.wikidata_endpoint)
@@ -187,14 +197,15 @@ def main(args):
         # A dictionary of {prev_rels: {next_rel, next_rel, ...}, ...},
         # where prev_rels is a tuple of previous relations.
         positive_connections = get_positive_connections_along_paths(paths, path_scores, positive_threshold)
-        
+
         for path in paths:
             train_records.extend(sample_records_from_path(path, question, question_entities,
                                                           positive_connections, wikidata))
-    print(f"Number of training records: {len(train_records)}")       
+    print(f"Number of training records: {len(train_records)}")
     train_records = convert_records_relation_id_to_lable(train_records, wikidata)
     write_records_to_csv(train_records, args.output_file)
-    print(f"Saved to {args.output_file}") 
+    print(f"Saved to {args.output_file}")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
