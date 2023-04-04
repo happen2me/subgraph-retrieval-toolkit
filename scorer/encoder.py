@@ -1,7 +1,11 @@
-import torch
+import json
+import os
+from pathlib import Path
+
 import lightning.pytorch as pl
-from transformers import AutoModel
+import torch
 from pytorch_metric_learning.losses import NTXentLoss
+from transformers import AutoModel
 
 
 def average_pool(last_hidden_states, attention_mask):
@@ -51,3 +55,13 @@ class LitSentenceEncoder(pl.LightningModule):
 
     def configure_optimizers(self) :
         return torch.optim.Adam(self.parameters(), lr=1e-5)
+
+    def save_huggingface_model(self, save_dir):
+        """Will save the model, so you can reload it using `from_pretrained()`."""
+        save_path = Path(save_dir)
+        if not save_path.exists():
+            save_path.mkdir(parents=True)
+        state_dict = self.model.state_dict()
+        torch.save(state_dict, os.path.join(save_dir, 'pytorch_model.bin'))
+        with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
+            json.dump(self.config.to_dict(), f)
