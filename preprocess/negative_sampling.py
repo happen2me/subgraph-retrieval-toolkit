@@ -14,6 +14,7 @@ import sys
 import argparse
 import random
 from collections import defaultdict
+from functools import lru_cache
 
 import srsly
 from tqdm import tqdm
@@ -141,6 +142,7 @@ def convert_records_relation_id_to_lable(records, wikidata):
     """
     processed_records = []
 
+    @lru_cache
     def get_relation_label(rel):
         if rel == END_REL:
             return END_REL
@@ -165,7 +167,7 @@ def write_records_to_csv(records, output_file):
     with open(output_file, 'w', encoding='utf-8') as f:
         for record in records:
             question = record['question']
-            prev_path = '#'.join(record['prev_path'])
+            prev_path = ' # '.join(record['prev_path'])
             positive_relation = record['positive_relation']
             negative_relations = ','.join(record['negative_relations'])
             line = f"{question} [SEP] {prev_path}, {positive_relation}, {negative_relations}"
