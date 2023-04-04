@@ -1,1 +1,3 @@
+lightning
+pytorch-metric-learning
 srsly
