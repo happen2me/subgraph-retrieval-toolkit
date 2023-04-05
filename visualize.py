@@ -18,12 +18,14 @@ def visualize_subgraph(sample, wikidata):
     """
     net = Network(directed=True, font_color='#000000')
     net.barnes_hut()
+    question_entities = sample['question_entities'] if 'question_entities' in sample else []
     for triplet in sample['triplets']:
         subject, relation, obj = triplet
         subject_label = wikidata.get_entity_label(subject)
+        subject_options = {'color':'#114B7A'} if subject in question_entities else {}
         obj_label = wikidata.get_entity_label(obj)
         relation_label = wikidata.get_relation_label(relation)
-        net.add_node(subject, label=subject_label)
+        net.add_node(subject, label=subject_label, **subject_options)
         net.add_node(obj, label=obj_label)
         net.add_edge(subject, obj, label=relation_label)
     net_options = {
