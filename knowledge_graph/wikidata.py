@@ -82,6 +82,7 @@ class Wikidata:
                  for path in paths]
         return paths
 
+    @lru_cache
     def deduce_leaves(self, src, path, limit=2000):
         """Deduce leave entities from source entity following the path.
         
@@ -214,6 +215,34 @@ class Wikidata:
         label = self.queryWikidata(query)
         if len(label) == 0:
             print(f'No label for relation {relation}.')
+            return None
+        label = label[0]['label']['value']
+        return label
+
+    @lru_cache
+    def get_entity_label(self, entity):
+        """Get label of an entity.
+
+        Args:
+            entity (str): entity, a QID
+
+        Returns:
+            str: label of the entity
+        """
+        query = f"""
+            SELECT ?label
+                WHERE {{
+                    BIND(wd:{entity} AS ?entity)
+                    ?entity rdfs:label ?label .
+                    FILTER(LANG(?label) = "en")
+                    }}
+                LIMIT 1
+            """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+        label = self.queryWikidata(query)
+        if len(label) == 0:
+            print(f'No label for entity {entity}.')
             return None
         label = label[0]['label']['value']
         return label
