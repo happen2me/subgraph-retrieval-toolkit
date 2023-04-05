@@ -16,8 +16,8 @@ class LitSentenceEncoder(pl.LightningModule):
         self.config = self.model.config
         self.loss_fn = NTXentLoss(temperature=temperature)
 
-    def __cal__(self, *args, **kwargs):
-        self.model(*args, **kwargs)
+    def forward(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
 
     @staticmethod
     def average_pool(last_hidden_states, attention_mask):
