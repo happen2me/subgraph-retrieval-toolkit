@@ -101,6 +101,7 @@ class Wikidata:
             query = f"""
                 SELECT DISTINCT ?x WHERE {{
                     wd:{src} wdt:{path[0]} ?x.
+                    FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
                     }}
                 LIMIT {limit}
             """
@@ -138,6 +139,7 @@ class Wikidata:
             SELECT DISTINCT ?x WHERE {{
                 VALUES ?src {{wd:{' wd:'.join(srcs)}}}
                 ?src wdt:{path[0]} ?x.
+                FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
                     }}
             LIMIT {limit}
             """
