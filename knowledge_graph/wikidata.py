@@ -52,6 +52,7 @@ class Wikidata:
         query = f"""
             SELECT DISTINCT ?r WHERE {{
                 wd:{src} ?r wd:{dst}.
+                FILTER(STRSTARTS(STR(?dst), "http://www.wikidata.org/entity/Q"))
             }}
             """
         paths = self.queryWikidata(query)
@@ -73,6 +74,7 @@ class Wikidata:
             SELECT DISTINCT ?r1 ?r2 WHERE {{
                 wd:{src} ?r1 ?x.
                 ?x ?r2 wd:{dst}.
+                FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
             }}
             """
         paths = self.queryWikidata(query)
@@ -110,6 +112,8 @@ class Wikidata:
                 SELECT DISTINCT ?x WHERE {{
                     wd:{src} wdt:{path[0]} ?y.
                     ?y wdt:{path[1]} ?x.
+                    FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
+                    FILTER(STRSTARTS(STR(?y), "http://www.wikidata.org/entity/Q"))
                 }}
                 LIMIT {limit}
             """
@@ -168,15 +172,18 @@ class Wikidata:
             query = f"""SELECT ?rel WHERE {{
                 wd:{src} ?rel ?obj .
                 FILTER(REGEX(STR(?rel), "^http://www.wikidata.org/prop/direct/"))
+                FILTER(STRSTARTS(STR(?obj), "http://www.wikidata.org/entity/Q"))
                 }}
                 LIMIT {limit}
                 """
         else: # hop == 2
             query = f"""SELECT ?rel1, ?rel2 WHERE {{
-                wd:{src} ?rel1 ?obj .
-                ?obj ?rel2 ?obj2 .
+                wd:{src} ?rel1 ?obj1 .
+                ?obj1 ?rel2 ?obj2 .
                 FILTER(REGEX(STR(?rel1), "^http://www.wikidata.org/prop/direct/"))
                 FILTER(REGEX(STR(?rel2), "^http://www.wikidata.org/prop/direct/"))
+                FILTER(STRSTARTS(STR(?obj1), "http://www.wikidata.org/entity/Q"))
+                FILTER(STRSTARTS(STR(?obj2), "http://www.wikidata.org/entity/Q"))
                 }}
                 LIMIT {limit}
                 """
