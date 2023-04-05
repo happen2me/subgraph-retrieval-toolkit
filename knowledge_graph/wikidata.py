@@ -202,13 +202,13 @@ class Wikidata:
 
     @lru_cache
     def get_relation_label(self, relation):
-        """Get label of a relation.
+        """Get label of a relation. If no label is found, return None.
 
         Args:
             relation (str): relation, a PID
 
         Returns:
-            str: label of the relation
+            str | None: label of the relation
         """
         query = f"""
             SELECT ?label
@@ -230,13 +230,13 @@ class Wikidata:
 
     @lru_cache
     def get_entity_label(self, entity):
-        """Get label of an entity.
+        """Get label of an entity. If no label is found, return None.
 
         Args:
             entity (str): entity, a QID
 
         Returns:
-            str: label of the entity
+            str | None: label of the entity
         """
         query = f"""
             SELECT ?label

@@ -37,7 +37,13 @@ class Scorer:
 
     @lru_cache
     def score(self, question, prev_relations, next_relation):
-        """Score a relation path."""
+        """Score a relation path.
+
+        Args:
+            question (str): question
+            prev_relations (tuple[str]): tuple of relation **labels** that have been traversed.
+            next_relation (str): next relation to be traversed
+        """
         query = f"{question} [SEP] {' # '.join(prev_relations)}"
         text_pair = [query, next_relation]
         inputs = self.tokenizer(text_pair, return_tensors='pt', padding=True)
@@ -83,7 +89,10 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
                     else:
                         neighbor_nodes = tuple(graph.deduce_leaves(
                             last_node, (relation,), limit=beam_width))
-                    score = scorer.score(question, prev_relations, relation)
+                    prev_relation_labels = tuple(graph.get_relation_label(relation) or relation
+                                                 for relation in prev_relations)
+                    next_relation_label = graph.get_relation_label(relation) or relation
+                    score = scorer.score(question, prev_relation_labels, next_relation_label)
                     # new_prev_relations include the previous relation and the next relation, the scores
                     # of those with the same new_prev_relations should be the same.
                     new_path = Path(last_nodes=neighbor_nodes,
