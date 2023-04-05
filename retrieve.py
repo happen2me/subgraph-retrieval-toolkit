@@ -1,3 +1,11 @@
+"""Retrieve triplets from a question and its grounding.
+
+Personal note: this is not an efficient and accurate implementation. It first ranks relation paths,
+and the reconstruct the graph via the paths. The two steps are separated, making the retrieved
+graph containing paths that was not retrieved. A better implementation would be to take the
+entities into consideration when training the scorer, and taking each new relation-entity pair
+as an expanding step.
+"""
 import argparse
 import heapq
 from collections import namedtuple
@@ -36,60 +44,60 @@ class Scorer:
 # - score stores the score of the relation path
 # - history_triplets stores the triplets that have been traversed, each triplet is a tuple
 #   of (node, relation, node)
-Path = namedtuple('Path', ['last_nodes', 'prev_relations', 'score', 'history_triplets'],
-                  defaults=[(), (), 0, set()])
+Path = namedtuple('Path', ['last_nodes', 'prev_relations', 'score'],
+                  defaults=[(), (), 0])
 
 
 def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_width, max_depth):
     """Beam search for paths."""
     # Each path is a tuple of (last_nodes, prev_relations, score, history_nodes)
     # When a relation is added, the last_nodes are updated by the new nodes that are connected to one of the last node by the relation
-    paths = [Path(tuple(question_entities), (), 0, set())]
+    paths = [Path(tuple(question_entities), (), 0)]
     best_paths = []
-
-    def get_idx_path_with_same_prev_relations(paths, new_path):
-        idx = -1
-        for idx, path in enumerate(paths):
-            # Theoretically there will only be at most one path with the same prev_relations
-            if path.prev_relations == new_path.prev_relations:
-                break
-        return idx
-
-    def append_or_merge_new_path(paths, new_path, idx_path_with_same_prev_relations):
-        if idx_path_with_same_prev_relations == -1:
-            return paths + [new_path]
-        path_with_same_prev_relations = paths[idx_path_with_same_prev_relations]
-        merged_path = Path(last_nodes=tuple(set(new_path.last_nodes + path_with_same_prev_relations.last_nodes)),
-                           prev_relations=new_path.prev_relations,
-                           score=path_with_same_prev_relations.score,
-                           history_triplets=path_with_same_prev_relations.history_triplets | new_path.history_triplets)
-        return paths[:idx_path_with_same_prev_relations] + [merged_path] + paths[idx_path_with_same_prev_relations+1:]
 
     for _ in range(max_depth):
         new_paths = []
-        for last_nodes, prev_relations, _, history_triplets in paths:
+        for last_nodes, prev_relations, _ in paths:
             for last_node in last_nodes:
                 neighbor_relations = graph.get_relations(last_node, limit=beam_width)
                 neighbor_relations += [END_REL]
                 for relation in neighbor_relations:
                     new_prev_relations = prev_relations + (relation,)
-                    neighbor_nodes = graph.deduce_leaves(last_node, [relation], limit=beam_width)
-                    new_triplets = set((last_node, relation, neighbor_node) for neighbor_node in neighbor_nodes)
+                    if relation == END_REL:
+                        neighbor_nodes = ()
+                    else:
+                        neighbor_nodes = tuple(graph.deduce_leaves(last_node, [relation], limit=beam_width))
+                    score = scorer.score(question, prev_relations, relation)
                     # new_prev_relations include the previous relation and the next relation, the scores
                     # of those with the same new_prev_relations should be the same.
                     new_path = Path(last_nodes=neighbor_nodes,
                                     prev_relations=new_prev_relations,
-                                    history_triplets=history_triplets | new_triplets)
-                    idx_path_with_same_prev_relations = get_idx_path_with_same_prev_relations(new_paths, new_path)
-                    if idx_path_with_same_prev_relations == -1:
-                        score = scorer.score(question, prev_relations, relation)
-                        new_path.score = score
-                    new_paths = append_or_merge_new_path(new_paths, new_path, idx_path_with_same_prev_relations)
+                                    score=score)
+                    new_paths.append(new_path)
 
         best_paths = heapq.nlargest(beam_width, new_paths, key=lambda x: x.score)
         paths = best_paths
     return paths
 
+
+def retrieve_entities_and_triplets_from_relation_path(src, relation_path):
+    """Retrieve entities and triplets from a path.
+    
+    Args:
+        src: the source node
+        relation_path: a list of relations
+
+    Returns:
+        entities: a list of entities
+        triplets: a list of triplets
+    """
+    pass
+
+
+def retrieve_triplets_from_paths(src_entities, paths):
+    """Retrieve triplets as subgraphs from paths.
+    """
+    return []
 
 def main(args):
     groundings = srsly.read_json(args.input)
@@ -99,6 +107,7 @@ def main(args):
         question = ground['question']
         question_entities = ground['question_entities']
         paths = beam_search_path(wikidata, scorer, question, question_entities, args.beam_width, args.max_depth)
+        triplets = retrieve_triplets_from_paths(question_entities, paths)
         
 
 
