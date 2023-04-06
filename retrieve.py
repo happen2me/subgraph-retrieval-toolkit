@@ -91,7 +91,10 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
                             last_node, (relation,), limit=beam_width))
                     prev_relation_labels = tuple(graph.get_relation_label(relation) or relation
                                                  for relation in prev_relations)
-                    next_relation_label = graph.get_relation_label(relation) or relation
+                    if relation == END_REL:
+                        next_relation_label = END_REL
+                    else:
+                        next_relation_label = graph.get_relation_label(relation) or relation
                     score = scorer.score(question, prev_relation_labels, next_relation_label)
                     # new_prev_relations include the previous relation and the next relation, the scores
                     # of those with the same new_prev_relations should be the same.
