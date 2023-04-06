@@ -10,7 +10,7 @@ from pyvis.network import Network
 from tqdm import tqdm
 from bs4 import BeautifulSoup as Soup
 
-from knowledge_graph.wikidata import Wikidata
+from knowledge_graph import Wikidata
 
 
 def visualize_subgraph(sample, wikidata):

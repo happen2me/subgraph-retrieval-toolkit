@@ -1,0 +1,1 @@
+from .wikidata import Wikidata

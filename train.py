@@ -13,7 +13,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
-from scorer.encoder import LitSentenceEncoder
+from scorer import LitSentenceEncoder
 
 
 def concate_all(example):
