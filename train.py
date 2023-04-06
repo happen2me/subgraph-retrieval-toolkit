@@ -45,9 +45,8 @@ class Collator:
         return batched
 
 
-def prepare_dataloaders(data_file, model_name_or_path, batch_size):
+def prepare_dataloaders(data_file, tokenizer, batch_size):
     """Prepare dataloaders for training and validation."""
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     def tokenize(example):
         tokenized = tokenizer(example['input_text'], padding='max_length', truncation=True, return_tensors='pt', max_length=32)
         return tokenized
@@ -64,10 +63,12 @@ def prepare_dataloaders(data_file, model_name_or_path, batch_size):
 
 def main(args):
     model = LitSentenceEncoder(args.model_name_or_path)
-    train_loader, validation_loader = prepare_dataloaders(args.data_file, args.model_name_or_path, args.batch_size)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+    train_loader, validation_loader = prepare_dataloaders(args.data_file, tokenizer, args.batch_size)
     trainer = pl.Trainer(accelerator=args.accelerator, default_root_dir=args.save_model_path, fast_dev_run=args.fast_dev_run)
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=validation_loader)
     model.save_huggingface_model(args.save_model_path)
+    tokenizer.save_pretrained(args.save_model_path)
 
 
 if __name__ == '__main__':
