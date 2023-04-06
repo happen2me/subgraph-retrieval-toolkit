@@ -1,5 +1,5 @@
 # subgraph-retrieval-wikidata
-Retrieve subgraphs on wikidata
+Retrieve subgraphs on Wikidata. The method is based on this [retrieval work](https://github.com/RUCKBReasoning/SubgraphRetrievalKBQA) for Freebase.
 
 ## Prerequisite
 
@@ -55,46 +55,56 @@ The score is based on the embedding similarity of the to-be-expanded relation wi
 The model is trained in a distant supervised learning fashion. Given the question entities and the answer entities, the model uses the shortest paths along them as the supervision signal.
 
 ### Preprocess a dataset
-1. prepare training samples where question entities and answer entities are know. The training data should be saved in a jsonl file (e.g. `data/grounded.jsonl`). Each training sample should come with the following format:
-```json
-{
-  "id": "sample-id",
-  "question": "Which universities did Barack Obama graduate from?",
-  "question_entities": [
-    "Q76"
-  ],
-  "answer_entities": [
-    "Q49122",
-    "Q1346110",
-    "Q4569677"
-  ]
-}
-```
+1. prepare training samples where question entities and answer entities are know.
+
+    The training data should be saved in a jsonl file (e.g. `data/grounded.jsonl`). Each training sample should come with the following format:
+    
+    ```json
+    {
+      "id": "sample-id",
+      "question": "Which universities did Barack Obama graduate from?",
+      "question_entities": [
+        "Q76"
+      ],
+      "answer_entities": [
+        "Q49122",
+        "Q1346110",
+        "Q4569677"
+      ]
+    }
+    ```
 2. Search paths between the question and the answer entities.
-```bash
-python preprocess/search_path.py --wikidata-endpoint WIKIDATA_ENDPOINT \
-	--ground-path data/grounded.jsonl \
-	--output-path data/paths.jsonl \
-	--remove-sample-without-path
-```
+
+    ```bash
+    python preprocess/search_path.py --wikidata-endpoint WIKIDATA_ENDPOINT \
+    	--ground-path data/grounded.jsonl \
+    	--output-path data/paths.jsonl \
+    	--remove-sample-without-path
+    ```
 3. Score the paths.
-The paths are scored with their Jaccard index with the answer. If the deduced entities is a closer set with the ground-truth answer entities, it will be assigned a higher score.
-```bash
-python preprocess/score_path.py --wikidata-endpoint WIKIDATA_ENDPOINT \
-	--paths-file data/paths.jsonl \
-	--output-path data/paths_scored.jsonl
-```
+
+    The paths are scored with their Jaccard index with the answer. If the deduced entities is a closer set with the ground-truth answer entities, it will be assigned a higher score.
+    
+    ```bash
+    python preprocess/score_path.py --wikidata-endpoint WIKIDATA_ENDPOINT \
+    	--paths-file data/paths.jsonl \
+    	--output-path data/paths_scored.jsonl
+    ```
 4. Negative sampling.
-At each expanding step, the negative samples are those false relations connected to the tracked entities. This step outputs the dataset for training as `train.jsonl`
-```bash
-python preprocess/negative_sampling.py \
-    --scored-path-file data/paths_scored.jsonl \
-    --output-file data/train.jsonl \
-    --wikidata-endpoint WIKIDATA_ENDPOINT
-```
+    
+    At each expanding step, the negative samples are those false relations connected to the tracked entities. This step outputs the dataset for training as `train.jsonl`
+    
+    ```bash
+    python preprocess/negative_sampling.py \
+        --scored-path-file data/paths_scored.jsonl \
+        --output-file data/train.jsonl \
+        --wikidata-endpoint WIKIDATA_ENDPOINT
+    ```
 
 ### Train a sentence encoder
+
 The scorer should be initialized from a pretrained encoder model from huggingface hub. Here I used `intfloat/e5-small`, which is a checkpoint of the BERT model.
+
 ```bash
 python train.py --data-file data/train.jsonl \
 	--model-name-or-path intfloat/e5-small \
