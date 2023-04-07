@@ -1,4 +1,7 @@
 # subgraph-retrieval-wikidata
+
+[![Tests](https://github.com/happen2me/subgraph-retrieval-wikidata/actions/workflows/pytest.yml/badge.svg)](https://github.com/happen2me/subgraph-retrieval-wikidata/actions/workflows/pytest/badge.svg)
+
 Retrieve subgraphs on Wikidata. The method is based on this [retrieval work](https://github.com/RUCKBReasoning/SubgraphRetrievalKBQA) for Freebase.
 
 ## Prerequisite
