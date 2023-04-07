@@ -201,6 +201,33 @@ class Wikidata:
         return relations
 
     @lru_cache
+    def get_label(self, identifier):
+        """Get label of an entity or a relation. If no label is found, return None.
+
+        Args:
+            identifier (str): entity or relation, a QID or a PID
+
+        Returns:
+            str | None: label of the entity or relation
+        """
+        query = f"""
+            SELECT ?label
+                WHERE {{
+                    BIND(wd:{identifier} AS ?identifier)
+                    ?identifier rdfs:label ?label .
+                    FILTER(LANG(?label) = "en")
+                    }}
+                LIMIT 1
+            """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+        label = self.queryWikidata(query)
+        if len(label) == 0:
+            print(f'No label for identifier {identifier}.')
+            return None
+        label = label[0]['label']['value']
+        return label
+
     def get_relation_label(self, relation):
         """Get label of a relation. If no label is found, return None.
 
@@ -210,25 +237,8 @@ class Wikidata:
         Returns:
             str | None: label of the relation
         """
-        query = f"""
-            SELECT ?label
-                WHERE {{
-                    BIND(wd:{relation} AS ?property)
-                    ?property rdfs:label ?label .
-                    FILTER(LANG(?label) = "en")
-                    }}
-                LIMIT 1
-            """
-        if self.prepend_prefixes:
-            query = self.PREFIXES + query
-        label = self.queryWikidata(query)
-        if len(label) == 0:
-            print(f'No label for relation {relation}.')
-            return None
-        label = label[0]['label']['value']
-        return label
+        return self.get_label(relation)
 
-    @lru_cache
     def get_entity_label(self, entity):
         """Get label of an entity. If no label is found, return None.
 
@@ -238,20 +248,4 @@ class Wikidata:
         Returns:
             str | None: label of the entity
         """
-        query = f"""
-            SELECT ?label
-                WHERE {{
-                    BIND(wd:{entity} AS ?entity)
-                    ?entity rdfs:label ?label .
-                    FILTER(LANG(?label) = "en")
-                    }}
-                LIMIT 1
-            """
-        if self.prepend_prefixes:
-            query = self.PREFIXES + query
-        label = self.queryWikidata(query)
-        if len(label) == 0:
-            print(f'No label for entity {entity}.')
-            return None
-        label = label[0]['label']['value']
-        return label
+        return self.get_label(entity)

@@ -1,5 +1,8 @@
 # data
+artifacts/
 data/
+htmls/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
