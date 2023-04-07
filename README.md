@@ -27,8 +27,9 @@ contains a [Wikidata Truthy](https://www.wikidata.org/wiki/Wikidata:Database_dow
 
 Alternatively, you can also use an [online Wikidata endpoint](https://query.wikidata.org), e.g. `https://query.wikidata.org/sparql`
 
-### Deploy a REL endpoint for entity linking (only necessary for preprocessing)
+### Deploy a REL endpoint for entity linking (only necessary for end-to-end inference)
 
+Please refer to this tutorial for REL endpoint deployment: [End-to-End Entity Linking](https://rel.readthedocs.io/en/latest/tutorials/e2e_entity_linking/)
 
 
 ## Retrieve subgraphs with a trained scorer

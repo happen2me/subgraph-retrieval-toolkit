@@ -24,7 +24,9 @@ class Scorer:
             prev_relations (tuple[str]): tuple of relation **labels** that have been traversed.
             next_relation (str): next relation to be traversed
         """
-        query = f"{question} [SEP] {' # '.join(prev_relations)}"
+        # Prepending 'query' and 'relation' corresponds to the way the model was trained (check collate_fn)
+        query = f"query: {question} [SEP] {' # '.join(prev_relations)}"
+        next_relation = 'relation: ' + next_relation
         text_pair = [query, next_relation]
         inputs = self.tokenizer(text_pair, return_tensors='pt', padding=True)
         inputs = {k: v.to(self.model.device) for k, v in inputs.items()}

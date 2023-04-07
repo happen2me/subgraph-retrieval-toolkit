@@ -125,7 +125,7 @@ def main(args):
     wikidata = Wikidata(args.wikidata_endpoint)
     scorer = Scorer(args.scorer_model_path)
     outputs = []
-    for ground in tqdm(groundings, total=total):
+    for ground in tqdm(groundings, total=total, desc='Retrieving subgraphs'):
         question = ground['question']
         question_entities = ground['question_entities']
         paths = beam_search_path(
