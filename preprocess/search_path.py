@@ -16,7 +16,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', ))
 from knowledge_graph.wikidata import Wikidata
 
 
-def generate_paths(src_entities, dst_entities, kg, max_path=100):
+def generate_paths(src_entities, dst_entities, kg: Wikidata, max_path=100):
     """Generate paths from question entities to answer entities.
     """
     paths = []
@@ -24,8 +24,8 @@ def generate_paths(src_entities, dst_entities, kg, max_path=100):
         for dst in dst_entities:
             if len(paths) >= max_path:
                 break
-            paths.extend(kg.search_one_hop_relation(src, dst))
-            paths.extend(kg.search_two_hop_relation(src, dst))
+            paths.extend(kg.search_one_hop_relations(src, dst))
+            paths.extend(kg.search_two_hop_relations(src, dst))
     return paths[:max_path]
 
 

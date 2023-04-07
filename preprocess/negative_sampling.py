@@ -27,7 +27,7 @@ END_REL = "END_REL"
 
 
 def sample_negative_relations(soruce_entities, prev_path, positive_connections,
-                              num_negative, wikidata):
+                              num_negative, wikidata: Wikidata):
     """A helper function to sample negative relations.
     
     Args:
@@ -43,7 +43,7 @@ def sample_negative_relations(soruce_entities, prev_path, positive_connections,
     negative_relations = set()
     for src in soruce_entities:
         # get all relations connected to current tracked entities (question or intermediate entities)
-        negative_relations |= set(wikidata.get_relations(src))
+        negative_relations |= set(wikidata.get_neighbor_relations(src))
         if len(negative_relations) > 100:  # yet another magic number :(
             break
     negative_relations = negative_relations - positive_connections[tuple(prev_path)]

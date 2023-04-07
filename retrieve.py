@@ -45,7 +45,7 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
         new_paths = []
         for last_nodes, prev_relations, _ in paths:
             for last_node in last_nodes:
-                neighbor_relations = graph.get_relations(
+                neighbor_relations = graph.get_neighbor_relations(
                     last_node, limit=beam_width)
                 neighbor_relations += [END_REL]
                 for relation in neighbor_relations:

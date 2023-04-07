@@ -1,13 +1,10 @@
 from functools import lru_cache
 from SPARQLWrapper import SPARQLWrapper, JSON
 
-
-def get_pid_from_uri(uri):
-    """Get property id from uri."""
-    return uri.split('/')[-1]
+from .base_graph import KnowledgeGraphBase
 
 
-class Wikidata:
+class Wikidata(KnowledgeGraphBase):
     PREFIXES: str = """PREFIX wd: <http://www.wikidata.org/entity/>
         PREFIX wds: <http://www.wikidata.org/entity/statement/>
         PREFIX wdv: <http://www.wikidata.org/value/>
@@ -39,7 +36,12 @@ class Wikidata:
             result = []
         return result
 
-    def search_one_hop_relation(self, src, dst):
+    @staticmethod
+    def get_pid_from_uri(uri):
+        """Get property id from uri."""
+        return uri.split('/')[-1]
+
+    def search_one_hop_relations(self, src, dst):
         """Search one hop relation between src and dst.
         
         Args:
@@ -57,10 +59,10 @@ class Wikidata:
             """
         paths = self.queryWikidata(query)
         # Keep only PIDs in the paths
-        paths = [[get_pid_from_uri(path['r']['value'])] for path in paths]
+        paths = [[self.get_pid_from_uri(path['r']['value'])] for path in paths]
         return paths
 
-    def search_two_hop_relation(self, src, dst):
+    def search_two_hop_relations(self, src, dst):
         """Search two hop relation between src and dst.
         
         Args:
@@ -79,8 +81,8 @@ class Wikidata:
             """
         paths = self.queryWikidata(query)
         # Keep only PIDs in the paths
-        paths = [[get_pid_from_uri(path['r1']['value']),
-                  get_pid_from_uri(path['r2']['value'])]
+        paths = [[self.get_pid_from_uri(path['r1']['value']),
+                  self.get_pid_from_uri(path['r2']['value'])]
                  for path in paths]
         return paths
 
@@ -155,7 +157,7 @@ class Wikidata:
         return leaves
 
     @lru_cache
-    def get_relations(self, src, hop=1, limit=100):
+    def get_neighbor_relations(self, src, hop=1, limit=100):
         """Get all relations connected to an entity. The relations are
         limited to direct relations (those with wdt: prefix).
 
@@ -192,11 +194,11 @@ class Wikidata:
 
         relations = self.queryWikidata(query)
         if hop == 1:
-            relations = [get_pid_from_uri(relation['rel']['value'])
+            relations = [self.get_pid_from_uri(relation['rel']['value'])
                          for relation in relations]
         else:
-            relations = [(get_pid_from_uri(relation['rel1']['value']),
-                          get_pid_from_uri(relation['rel2']['value']))
+            relations = [(self.get_pid_from_uri(relation['rel1']['value']),
+                          self.get_pid_from_uri(relation['rel2']['value']))
                          for relation in relations]
         return relations
 
