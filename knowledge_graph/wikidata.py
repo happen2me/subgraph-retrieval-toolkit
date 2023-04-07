@@ -249,25 +249,3 @@ class Wikidata(KnowledgeGraphBase):
             return None
         label = label[0]['label']['value']
         return label
-
-    def get_relation_label(self, relation):
-        """Get label of a relation. If no label is found, return None.
-
-        Args:
-            relation (str): relation, a PID
-
-        Returns:
-            str | None: label of the relation
-        """
-        return self.get_label(relation)
-
-    def get_entity_label(self, entity):
-        """Get label of an entity. If no label is found, return None.
-
-        Args:
-            entity (str): entity, a QID
-
-        Returns:
-            str | None: label of the entity
-        """
-        return self.get_label(entity)

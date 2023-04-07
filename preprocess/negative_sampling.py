@@ -144,15 +144,15 @@ def convert_records_relation_id_to_lable(records, wikidata):
     processed_records = []
 
     @lru_cache
-    def get_relation_label(rel):
+    def get_label(rel):
         if rel == END_REL:
             return END_REL
-        return wikidata.get_relation_label(rel) or rel
+        return wikidata.get_label(rel) or rel
 
     for record in tqdm(records, desc='Converting relation ids to labels'):
-        record['prev_path'] = [get_relation_label(rel) for rel in record['prev_path']]
-        record['positive_relation'] = get_relation_label(record['positive_relation'])
-        record['negative_relations'] = [get_relation_label(rel) for rel in record['negative_relations']]
+        record['prev_path'] = [get_label(rel) for rel in record['prev_path']]
+        record['positive_relation'] = get_label(record['positive_relation'])
+        record['negative_relations'] = [get_label(rel) for rel in record['negative_relations']]
         processed_records.append(record)
     return processed_records
 
