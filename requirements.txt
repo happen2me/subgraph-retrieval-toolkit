@@ -2,4 +2,7 @@ beautifulsoup4
 lightning
 pytorch-metric-learning
 pyvis
+SPARQLWrapper
 srsly
+transformers
+tqdm
