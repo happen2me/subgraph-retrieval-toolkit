@@ -1,7 +1,7 @@
 from functools import lru_cache
 from SPARQLWrapper import SPARQLWrapper, JSON
 
-from .base_graph import KnowledgeGraphBase
+from .graph_base import KnowledgeGraphBase
 
 
 class Wikidata(KnowledgeGraphBase):
@@ -16,12 +16,25 @@ class Wikidata(KnowledgeGraphBase):
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX bd: <http://www.bigdata.com/rdf#>
         """
+    ENTITY_PREFIX: str = "http://www.wikidata.org/entity/Q"
 
-    def __init__(self, endpoint, prepend_prefixes=False):
+    def __init__(self, endpoint, prepend_prefixes=False, exclude_qualifiers=True):
+        """Create a Wikidata query handler.
+
+        Args:
+            endpoint (str): SPARQL endpoint, e.g. https://query.wikidata.org/sparql
+                Note that the protocal part (like https) is necessary.
+            prepend_prefixes (bool, optional): whether to prepend prefixes to the query.
+                Necessary for endpoints without pre-defined prefixes. Defaults to False.
+            exclude_qualifiers (bool, optional): whether to filter out qualifiers in the
+                queried entities. If set to True, only Wikidata entities (QXX) will be
+                considered. Defaults to True.
+        """
         self.sparql = SPARQLWrapper(endpoint)
         self.sparql.setReturnFormat(JSON)
         self.prepend_prefixes = prepend_prefixes
-    
+        self.exclude_qualifiers = exclude_qualifiers
+
     def queryWikidata(self, query):
         if self.prepend_prefixes:
             query = self.PREFIXES + query
@@ -41,6 +54,15 @@ class Wikidata(KnowledgeGraphBase):
         """Get property id from uri."""
         return uri.split('/')[-1]
 
+    def get_quantifier_filter(self, var_name):
+        """Get quantifier filter string where the var is restricted to be entities.
+        If exclude_qualifiers is set to False, return empty string.
+
+        Note: in Wikidata, entities are prefixed with "http://www.wikidata.org/entity/Q",
+            while qualifiers are non-entity (and mostly string) values.
+        """
+        return f'FILTER(STRSTARTS(STR(?{var_name}), "{self.ENTITY_PREFIX}"))' if self.exclude_qualifiers else ''
+
     def search_one_hop_relations(self, src, dst):
         """Search one hop relation between src and dst.
         
@@ -54,7 +76,6 @@ class Wikidata(KnowledgeGraphBase):
         query = f"""
             SELECT DISTINCT ?r WHERE {{
                 wd:{src} ?r wd:{dst}.
-                FILTER(STRSTARTS(STR(?dst), "http://www.wikidata.org/entity/Q"))
             }}
             """
         paths = self.queryWikidata(query)
@@ -76,7 +97,7 @@ class Wikidata(KnowledgeGraphBase):
             SELECT DISTINCT ?r1 ?r2 WHERE {{
                 wd:{src} ?r1 ?x.
                 ?x ?r2 wd:{dst}.
-                FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
+                {self.get_quantifier_filter('x')}
             }}
             """
         paths = self.queryWikidata(query)
@@ -92,7 +113,7 @@ class Wikidata(KnowledgeGraphBase):
         
         Args:
             src_entity (str): source entity
-            path (list[str]): path from source entity to destination entity
+            path (tuple[str]): path from source entity to destination entity
             limit (int, optional): limit of the number of leaves. Defaults to 2000.
         
         Returns:
@@ -105,7 +126,7 @@ class Wikidata(KnowledgeGraphBase):
             query = f"""
                 SELECT DISTINCT ?x WHERE {{
                     wd:{src} wdt:{path[0]} ?x.
-                    FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
+                    {self.get_quantifier_filter('x')}
                     }}
                 LIMIT {limit}
             """
@@ -114,8 +135,8 @@ class Wikidata(KnowledgeGraphBase):
                 SELECT DISTINCT ?x WHERE {{
                     wd:{src} wdt:{path[0]} ?y.
                     ?y wdt:{path[1]} ?x.
-                    FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
-                    FILTER(STRSTARTS(STR(?y), "http://www.wikidata.org/entity/Q"))
+                    {self.get_quantifier_filter('y')}
+                    {self.get_quantifier_filter('x')}
                 }}
                 LIMIT {limit}
             """
@@ -140,13 +161,12 @@ class Wikidata(KnowledgeGraphBase):
         assert len(path) < 2, f'Currenly only support paths with length less than 2, got {len(path)}'
         if len(path) == 0:
             return srcs
-        # len(path) == 1
         query = f"""
             SELECT DISTINCT ?x WHERE {{
                 VALUES ?src {{wd:{' wd:'.join(srcs)}}}
                 ?src wdt:{path[0]} ?x.
-                FILTER(STRSTARTS(STR(?x), "http://www.wikidata.org/entity/Q"))
-                    }}
+                {self.get_quantifier_filter('x')}
+            }}
             LIMIT {limit}
             """
         if self.prepend_prefixes:
@@ -171,21 +191,21 @@ class Wikidata(KnowledgeGraphBase):
         """
         assert hop < 3, f'Currenly only support relations with hop less than 3, got {hop}'
         if hop == 1:
-            query = f"""SELECT ?rel WHERE {{
+            query = f"""SELECT DISTINCT ?rel WHERE {{
                 wd:{src} ?rel ?obj .
                 FILTER(REGEX(STR(?rel), "^http://www.wikidata.org/prop/direct/"))
-                FILTER(STRSTARTS(STR(?obj), "http://www.wikidata.org/entity/Q"))
+                {self.get_quantifier_filter('obj')}
                 }}
                 LIMIT {limit}
                 """
         else: # hop == 2
-            query = f"""SELECT ?rel1, ?rel2 WHERE {{
+            query = f"""SELECT DISTINCT ?rel1 ?rel2 WHERE {{
                 wd:{src} ?rel1 ?obj1 .
                 ?obj1 ?rel2 ?obj2 .
                 FILTER(REGEX(STR(?rel1), "^http://www.wikidata.org/prop/direct/"))
                 FILTER(REGEX(STR(?rel2), "^http://www.wikidata.org/prop/direct/"))
-                FILTER(STRSTARTS(STR(?obj1), "http://www.wikidata.org/entity/Q"))
-                FILTER(STRSTARTS(STR(?obj2), "http://www.wikidata.org/entity/Q"))
+                {self.get_quantifier_filter('obj1')}
+                {self.get_quantifier_filter('obj2')}
                 }}
                 LIMIT {limit}
                 """

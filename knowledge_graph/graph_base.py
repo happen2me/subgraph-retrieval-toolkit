@@ -39,8 +39,8 @@ class KnowledgeGraphBase:
 
         Args:
             src_entity (str): source entity
-            path (list[str]): path from source entity to destination entity
-            limit (int, optional): limit of the number of leaves. Defaults to 2000.
+            path (tuple[str]): path from source entity to destination entity
+            limit (int, optional): limit of the number of leaves.
 
         Returns:
             list[str]: list of leaves. Each leaf is a QID.
@@ -48,15 +48,17 @@ class KnowledgeGraphBase:
         raise NotImplementedError
 
     @abstractmethod
-    def get_neighbor_relations(self, src: str, dst: str) -> List[str]:
+    def get_neighbor_relations(self, src: str, hop: int, limit: int) -> List[str]:
         """Get relations between src and dst.
 
         Args:
             src (str): source entity
-            dst (str): destination entity
+            hop (int, optional): hop of the relations. Defaults to 1.
+            limit (int, optional): limit of the number of relations.
 
         Returns:
-            list[str]: list of relations
+            list[str] | list[tuple[str]]: list of relations (one-hop)
+                or list of tuples of relations (multi-hop)
         """
         raise NotImplementedError
 
