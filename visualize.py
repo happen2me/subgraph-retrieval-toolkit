@@ -4,6 +4,7 @@ The visualized subgraphs are html files.
 import os
 import argparse
 import json
+from pathlib import Path
 
 import srsly
 from pyvis.network import Network
@@ -20,16 +21,20 @@ def visualize_subgraph(sample, wikidata):
     net.barnes_hut()
     question_entities = sample['question_entities'] if 'question_entities' in sample else []
     answer_entities = sample['answer_entities'] if 'answer_entities' in sample else []
+    # Add question entities even if they are not in the triplets
+    for entity in question_entities:
+        net.add_node(entity, label=wikidata.get_label(entity), color='#114B7A')
     for triplet in sample['triplets']:
         subject, relation, obj = triplet
-        subject_label = wikidata.get_entity_label(subject)
+        subject_label = wikidata.get_label(subject)
         subject_options = {'color':'#114B7A'} if subject in question_entities else {}
-        obj_label = wikidata.get_entity_label(obj)
+        obj_label = wikidata.get_label(obj)
         obj_options = {'color':'#1B5E20'} if obj in answer_entities else {}
-        relation_label = wikidata.get_relation_label(relation)
+        relation_label = wikidata.get_label(relation)
         net.add_node(subject, label=subject_label, **subject_options)
         net.add_node(obj, label=obj_label, **obj_options)
         net.add_edge(subject, obj, label=relation_label)
+
     net_options = {
         'shape': 'dot',
         'font': {
@@ -69,6 +74,9 @@ def main(args):
     samples = srsly.read_jsonl(args.input)
     total = sum(1 for _ in srsly.read_jsonl(args.input))
     total = min(total, args.max_output)
+    if not os.path.exists(args.output_dir):
+        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+        print(f'Created output directory: {args.output_dir}')
     for i, sample in enumerate(tqdm(samples, desc='Visualizing graphs', total=total)):
         if i >= args.max_output:
             break
@@ -80,6 +88,7 @@ def main(args):
         output_path = os.path.join(args.output_dir, sample['id'] + '.html')
         with open(output_path, 'w', encoding='utf-8') as fout:
             fout.write(html)
+    print(f'Visualized graphs outputted to {args.output_dir}.')
 
 
 if __name__ == '__main__':
