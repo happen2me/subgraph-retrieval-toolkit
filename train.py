@@ -4,12 +4,14 @@ e.g.
 python train.py --data-file data/train.jsonl --model-name-or-path intfloat/e5-small --save-model-path artifacts/scorer
 """
 import argparse
+import datetime
 from collections import defaultdict
 from dataclasses import dataclass
 
 import lightning.pytorch as pl
 import torch
 from datasets import load_dataset
+from lightning.pytorch.loggers import WandbLogger
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
@@ -65,13 +67,17 @@ def main(args):
     model = LitSentenceEncoder(args.model_name_or_path)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     train_loader, validation_loader = prepare_dataloaders(args.data_file, tokenizer, args.batch_size)
-    trainer = pl.Trainer(accelerator=args.accelerator, default_root_dir=args.save_model_path, fast_dev_run=args.fast_dev_run)
+    day_hour = datetime.datetime.now().strftime('%d-%H')
+    wandb_logger = WandbLogger(project='retrieval', name=day_hour , group='contrastive', save_dir='artifacts')
+    trainer = pl.Trainer(accelerator=args.accelerator, default_root_dir=args.save_model_path,
+                         fast_dev_run=args.fast_dev_run, max_epochs=args.max_epochs, logger=wandb_logger)
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=validation_loader)
     model.save_huggingface_model(args.save_model_path)
     tokenizer.save_pretrained(args.save_model_path)
 
 
 if __name__ == '__main__':
+    torch.set_float32_matmul_precision('medium')
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-file', default='data/retrieval/train.jsonl', help='train data')
     parser.add_argument('--model-name-or-path', default='intfloat/e5-small', help='pretrained model name or path')

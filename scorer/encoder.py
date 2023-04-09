@@ -104,6 +104,7 @@ class LitSentenceEncoder(pl.LightningModule):
         # indices_tuple (anchor1, postives, anchor2, negatives)
         indices_tuple = (torch.zeros((1,), dtype=torch.long), torch.ones((1,), dtype=torch.long),
                          torch.zeros((n_neg,), dtype=torch.long), torch.arange(2, n_samples, dtype=torch.long))
+        indices_tuple = tuple(x.to(self.device) for x in indices_tuple)
         train_loss = 0
         for sentence_group in pooled_embeddings:
             loss = self.loss_fn(sentence_group, indices_tuple=indices_tuple)
