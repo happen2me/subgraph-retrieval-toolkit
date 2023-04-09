@@ -41,11 +41,14 @@ class LitSentenceEncoder(pl.LightningModule):
         # and the negatives to have different labels, so that the query and the positive will
         # be pulled together, and the query and the negatives will be pushed apart.
         # Ref: https://github.com/KevinMusgrave/pytorch-metric-learning/issues/179
-        labels = torch.arange(n_sentences).to(embeddings.device)
-        labels[1] = labels[0]
+        n_neg = n_sentences - 2
+        # I manurally create positive pairs as (0, 1), and negative pairs as (0, 2), (0, 3), ...
+        # indices_tuple (anchor1, postives, anchor2, negatives)
+        indices_tuple = (torch.zeros((1,), dtype=torch.long), torch.ones((1,), dtype=torch.long),
+                         torch.zeros((n_neg,), dtype=torch.long), torch.arange(2, n_sentences, dtype=torch.long))
         train_loss = 0
         for sentence_group in embeddings:
-            loss = self.loss_fn(sentence_group, labels)
+            loss = self.loss_fn(sentence_group, indices_tuple=indices_tuple)
             train_loss = train_loss + loss
         self.log('train_loss', train_loss)
         return train_loss
