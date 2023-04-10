@@ -8,7 +8,7 @@ e.g.
 python preprocess/negative_sampling.py \
     --scored-path-file data/preprocess/paths_scored.jsonl \
     --output-file data/preprocess/train_.jsonl\
-    --wikidata-endpoint https://query.wikidata.org/sparql
+    --positive-threshold 0.3
 """
 import os
 import sys
@@ -65,7 +65,7 @@ def is_candidate_space_too_large(path, question_entities, wikidata, candidate_de
     """
     flag_too_large = False
     for i in range(1, len(path)):
-        prev_path = path[:i]
+        prev_path = tuple(path[:i])
         # The further the path is from the question, the greater the search space becomes.
         limit = candidate_depth_multiplier ** i
         candidate_entities = set()

@@ -77,7 +77,8 @@ class LitSentenceEncoder(pl.LightningModule):
         similarity = self.similarity_fn(query_embeddings, target_embeddings, dim=-1)
         return similarity
 
-    def training_step(self, batch, batch_idx):
+    def batch_forward(self, batch):
+        """The common forward function for both training and inference."""
         # batch = {'input_ids': input_ids, 'attention_mask': attention_mask}
         # input_ids: [batch_size, 1(query) + 1(positive) + k(negative), seq_len]
         batch_size, n_samples, seq_len = batch['input_ids'].shape
@@ -105,18 +106,23 @@ class LitSentenceEncoder(pl.LightningModule):
         indices_tuple = (torch.zeros((1,), dtype=torch.long), torch.ones((1,), dtype=torch.long),
                          torch.zeros((n_neg,), dtype=torch.long), torch.arange(2, n_samples, dtype=torch.long))
         indices_tuple = tuple(x.to(self.device) for x in indices_tuple)
-        train_loss = 0
+        loss = 0
         for sentence_group in pooled_embeddings:
-            loss = self.loss_fn(sentence_group, indices_tuple=indices_tuple)
-            train_loss = train_loss + loss
+            loss = loss + self.loss_fn(sentence_group, indices_tuple=indices_tuple)
+        return loss
+
+    def training_step(self, batch, batch_idx):
+        train_loss = self.batch_forward(batch)
         self.log('train_loss', train_loss)
         return train_loss
 
     def validation_step(self, batch, batch_idx):
-        return self.training_step(batch, batch_idx)
+        val_loss =  self.batch_forward(batch)
+        self.log('val_loss', val_loss)
+        return val_loss
 
     def configure_optimizers(self) :
-        return torch.optim.Adam(self.parameters(), lr=1e-5)
+        return torch.optim.Adam(self.parameters(), lr=5e-5)
 
     def save_huggingface_model(self, save_dir):
         """Will save the model, so you can reload it using `from_pretrained()`."""

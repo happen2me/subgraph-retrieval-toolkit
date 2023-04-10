@@ -1,9 +1,8 @@
 """2. This script merges the grounded data into one training data.
 
 e.g.
-python preprocess/merge_ground.py  --output-path data/preprocess/grounded.jsonl --ground-files\
-    data/preprocess/mintaka.grounded.train.jsonl data/preprocess/mintaka.grounded.validation.jsonl\
-    data/preprocess/mkqa.grounded.jsonl
+python preprocess/merge_ground.py  --output-path data/preprocess/merged-ground.jsonl --ground-files\
+    data/preprocess/mintaka-ground.jsonl data/preprocess/mkqa-ground.jsonl
 """
 import argparse
 import srsly

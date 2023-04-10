@@ -3,7 +3,7 @@
 This corresponds to search_to_get_path.py in the RUC's code.
 It enumerates all paths from the question entities to answer entities.
 
-python preprocess/search_path.py --ground-path data/preprocess/grounded.jsonl --output-path data/preprocess/paths.jsonl
+python preprocess/search_path.py --ground-path data/preprocess/merged-ground.jsonl --output-path data/preprocess/paths.jsonl --remove-sample-without-path
 """
 import sys
 import os
@@ -41,7 +41,7 @@ def main(args):
     wikidata = Wikidata(args.wikidata_endpoint)
     processed_samples = []
     skipped = 0
-    for sample in tqdm(ground_samples, total=total_samples):
+    for sample in tqdm(ground_samples, total=total_samples, desc='Searching paths'):
         question_entities = sample['question_entities']
         answer_entities = sample['answer_entities']
         try:

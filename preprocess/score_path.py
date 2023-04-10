@@ -72,6 +72,7 @@ def main(args):
             # path score is the max score of all possible source entities following the path
             # Personal note: this is weird, why don't you start from the question entity where the
             # path was originally found?
+            path = tuple(path)  # this makes it hashable
             score = max(score_path(wikidata, src, path, answer_entities, metric='recall') for src in question_entities)
             path_scores.append(score)
         sample['path_scores'] = path_scores
