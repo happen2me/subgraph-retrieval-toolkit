@@ -11,7 +11,7 @@ In my understanding, this is similar to TF-IDF, the path is more precise if the 
 a smaller set of entities but have a higher intersection with the ground truth entities.
 
 e.g.
-python preprocess/score_path.py --paths-file data/retrieval/paths.jsonl --output-path data/retrieval/paths_scored.jsonl
+python preprocess/score_path.py --paths-file data/preprocess/paths.jsonl --output-path data/preprocess/paths_scored.jsonl
 """
 import os
 import sys
@@ -24,7 +24,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', ))
 from knowledge_graph.wikidata import Wikidata
 
 
-def score_path(kg, src, path, answers):
+def score_path(kg, src, path, answers, metric='jaccard'):
     """Calculate the HIT score of a given path.
     
     Args:
@@ -32,7 +32,11 @@ def score_path(kg, src, path, answers):
         src (str): the source entity
         path (list): the path
         answers (list): the ground truth entities
+        metric (str): how the paths are scored. 'jaccard' or 'recall'
+            Default: 'jaccard', per the original implementation
     """
+    if metric not in ('jaccard', 'recall'):
+        raise ValueError(f'Unknown metric: {metric}')
     leaves = kg.deduce_leaves(src, path)
     leaves = set(leaves)
     answers = set(answers)
@@ -41,7 +45,11 @@ def score_path(kg, src, path, answers):
         # In the original implementation, they return 1 if the leaves is empty
         # I think it's more meaningful to set it to 0, as this path leads to no results
         return 0
-    return len(hit) / len(leaves)
+    if metric == 'jaccard':
+        score = len(hit) / len(leaves)
+    else: # metric == 'recall':
+        score = len(hit) / len(answers)
+    return score
 
 
 def main(args):
@@ -64,7 +72,7 @@ def main(args):
             # path score is the max score of all possible source entities following the path
             # Personal note: this is weird, why don't you start from the question entity where the
             # path was originally found?
-            score = max(score_path(wikidata, src, path, answer_entities) for src in question_entities)
+            score = max(score_path(wikidata, src, path, answer_entities, metric='recall') for src in question_entities)
             path_scores.append(score)
         sample['path_scores'] = path_scores
         processed_samples.append(sample)

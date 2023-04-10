@@ -6,8 +6,8 @@ negative instances to optimize the probability of the observed ones.
 
 e.g.
 python preprocess/negative_sampling.py \
-    --scored-path-file data/retrieval/paths_scored.jsonl \
-    --output-file data/retrieval/train_.jsonl\
+    --scored-path-file data/preprocess/paths_scored.jsonl \
+    --output-file data/preprocess/train_.jsonl\
     --wikidata-endpoint https://query.wikidata.org/sparql
 """
 import os
@@ -43,7 +43,7 @@ def sample_negative_relations(soruce_entities, prev_path, positive_connections,
     negative_relations = set()
     for src in soruce_entities:
         # get all relations connected to current tracked entities (question or intermediate entities)
-        negative_relations |= set(wikidata.get_neighbor_relations(src))
+        negative_relations |= set(wikidata.get_neighbor_relations(src, limit=50))
         if len(negative_relations) > 100:  # yet another magic number :(
             break
     negative_relations = negative_relations - positive_connections[tuple(prev_path)]
@@ -186,11 +186,9 @@ def main(args):
     # Each sample has the following fields:
     # - id: sample id
     # - question: question text
-    # - question_entities: list of question entities
-    # - answer_entities: lis
+    # - question_entities: list of question entities (ids)
+    # - answer_entities: list of answer entities (ids)
     # - question: question text
-    # - question_entities: list of question entities
-    # - answer_entities: list of answer entities
     # - paths: list of paths
     # - path_scores: list of path scores
     samples = srsly.read_jsonl(args.scored_path_file)
@@ -221,7 +219,7 @@ if __name__ == '__main__':
     parser.add_argument('--wikidata-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='wikidata endpoint')
     parser.add_argument('--scored-path-file', help='The file containing scored paths')
     parser.add_argument('--output-file', help='The output file')
-    parser.add_argument('--positive-threshold', type=float, default=0.5, help='The threshold to determine whether a path is positive or negative')
+    parser.add_argument('--positive-threshold', type=float, default=0.3, help='The threshold to determine whether a path is positive or negative')
     args = parser.parse_args()
-    
+
     main(args)

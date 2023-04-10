@@ -1,11 +1,13 @@
 """1. Load the dataset
 This program filters the grounded samples, removing those without any answer or question entity.
+
 - For Mintaka dataset, those without any answer entity are removed.
-$ python load_dataset.py --dataset mintaka --ground-path data/mintaka/grounded/train.jsonl --output-path data/retrieval/mintaka.grounded.train.jsonl
+$ python load_dataset.py --dataset mintaka --ground-path data/mintaka/grounded/train.jsonl --output-path data/preprocess/mintaka.grounded.train.jsonl
 Train: Processed 8537 samples, skipped 5463 samples, total 14000 samples
 Validation: Processed 1223 samples, skipped 777 samples, total 2000 samples
+
 - For MKQA dataset, those without any question entity are removed.
-$ python preprocess/load_dataset.py --dataset mkqa --ground-path data/mkqa/grounded/ground.jsonl --output-path data/retrieval/mkqa.grounded.jsonl
+$ python preprocess/load_dataset.py --dataset mkqa --ground-path data/mkqa/grounded/ground.jsonl --output-path data/preprocess/mkqa.grounded.jsonl
 Processed 2112 samples, skipped 7888 samples, total 10000 samples
 """
 import argparse
