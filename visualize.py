@@ -22,11 +22,11 @@ def visualize_subgraph(sample, wikidata):
     answer_entities = sample['answer_entities'] if 'answer_entities' in sample else []
     for triplet in sample['triplets']:
         subject, relation, obj = triplet
-        subject_label = wikidata.get_entity_label(subject)
+        subject_label = wikidata.get_label(subject)
         subject_options = {'color':'#114B7A'} if subject in question_entities else {}
-        obj_label = wikidata.get_entity_label(obj)
+        obj_label = wikidata.get_label(obj)
         obj_options = {'color':'#1B5E20'} if obj in answer_entities else {}
-        relation_label = wikidata.get_relation_label(relation)
+        relation_label = wikidata.get_label(relation)
         net.add_node(subject, label=subject_label, **subject_options)
         net.add_node(obj, label=obj_label, **obj_options)
         net.add_edge(subject, obj, label=relation_label)
