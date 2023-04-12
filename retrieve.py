@@ -13,6 +13,7 @@ python retrieve.py --scorer-model-path intfloat/e5-small --input data/ground.jso
 import argparse
 import heapq
 from collections import namedtuple
+from functools import cache
 
 import srsly
 from tqdm import tqdm
@@ -44,12 +45,12 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
     for _ in range(max_depth):
         new_paths = []
         for last_nodes, prev_relations, _ in paths:
+            if prev_relations and prev_relations[-1] == END_REL:
+                continue
             for last_node in last_nodes:
-                neighbor_relations = graph.get_neighbor_relations(
-                    last_node, limit=beam_width)
+                neighbor_relations = graph.get_neighbor_relations(last_node, limit=beam_width * 2)
                 neighbor_relations += [END_REL]
                 for relation in neighbor_relations:
-                    new_prev_relations = prev_relations + (relation,)
                     if relation == END_REL:
                         neighbor_nodes = ()
                     else:
@@ -64,15 +65,60 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
                     score = scorer.score(question, prev_relation_labels, next_relation_label)
                     # new_prev_relations include the previous relation and the next relation, the scores
                     # of those with the same new_prev_relations should be the same.
+                    new_prev_relations = prev_relations + (relation,)
                     new_path = Path(last_nodes=neighbor_nodes,
                                     prev_relations=new_prev_relations,
                                     score=score)
                     new_paths.append(new_path)
 
-        best_paths = heapq.nlargest(
-            beam_width, new_paths, key=lambda x: x.score)
+        best_paths = heapq.nlargest(beam_width, new_paths + paths, key=lambda x: x.score)
         paths = best_paths
     return paths
+
+
+def exhaustive_search_path(graph: Wikidata, scorer: Scorer, question, question_entities, beam_width, max_depth):
+    """This function reimplement RUC's paper's solution. In the search process, only the history
+    paths are recorded; each new relation is looked up via looking up the end relations from the
+    question entities following a history path.
+    """
+    candidate_paths = [Path(prev_relations=(), score=0)]
+    result_paths = []
+    depth = 0
+
+    @cache
+    def expand_relations(src, prev_relations):
+        leaves = graph.deduce_leaves(src, prev_relations, limit=beam_width * 2)
+        relations = set()
+        for leaf in leaves:
+            relations.update(graph.get_neighbor_relations(leaf, limit=beam_width * 2))
+        return relations
+
+    while candidate_paths and len(result_paths) < beam_width and depth < max_depth:
+        tracked_paths = []
+        for question_entity in question_entities:
+            for _, prev_relations, prev_score in candidate_paths:
+                candidate_relations = expand_relations(question_entity, prev_relations)
+                prev_relation_labels = tuple(graph.get_label(relation) or relation
+                                             for relation in prev_relations)
+                candidate_relation_labels = tuple(graph.get_label(relation) or relation
+                                                  for relation in candidate_relations)
+                scores = scorer.batch_score(question, prev_relation_labels,
+                                            candidate_relation_labels)
+                tracked_paths += [Path(last_nodes=(question_entity,),
+                                        prev_relations=prev_relations + (relation,),
+                                        score=score + prev_score) \
+                                  for relation, score in zip(candidate_relations, scores)]
+        tracked_paths = heapq.nlargest(beam_width, tracked_paths, key=lambda x: x.score)
+        depth += 1
+        candidate_paths = []
+        for path in tracked_paths:
+            if path.prev_relations and path.prev_relations[-1] == END_REL:
+                result_paths.append(path)
+            else:
+                candidate_paths.append(path)
+    # Rest of the candidate paths are added to the result paths
+    result_paths = heapq.nlargest(beam_width, result_paths + candidate_paths, key=lambda x: x.score)
+    return result_paths
 
 
 def retrieve_triplets_from_relation_path(src, relation_path, graph: Wikidata, beam_width=10):
@@ -130,8 +176,7 @@ def main(args):
         question_entities = ground['question_entities']
         paths = beam_search_path(
             wikidata, scorer, question, question_entities, args.beam_width, args.max_depth)
-        triplets = retrieve_triplets_from_paths(
-            question_entities, paths, wikidata)
+        triplets = retrieve_triplets_from_paths(question_entities, paths, wikidata)
         ground['triplets'] = triplets
         outputs.append(ground)
     srsly.write_jsonl(args.output_path, outputs)
@@ -141,15 +186,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--wikidata-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
                         help='endpoint of the wikidata sparql service')
-    parser.add_argument('--scorer-model-path', type=str,
-                        default='models/roberta-base', help='path to the scorer model')
-    parser.add_argument('--input', type=str, required=True,
-                        help='path to the grounded qustions')
-    parser.add_argument('--output-path', type=str,
-                        required=True, help='path to the output file')
-    parser.add_argument('--beam-width', type=int, default=5,
-                        help='beam width for beam search')
-    parser.add_argument('--max-depth', type=int, default=2,
-                        help='maximum depth of the search tree')
+    parser.add_argument('--scorer-model-path', type=str, default='models/roberta-base',
+                        help='path to the scorer model')
+    parser.add_argument('--input', type=str, required=True, help='path to the grounded qustions')
+    parser.add_argument('--output-path', type=str, required=True, help='path to the output file')
+    parser.add_argument('--beam-width', type=int, default=10, help='beam width for beam search')
+    parser.add_argument('--max-depth', type=int, default=2, help='maximum depth of the search tree')
     args = parser.parse_args()
     main(args)
