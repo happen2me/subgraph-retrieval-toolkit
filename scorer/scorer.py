@@ -1,7 +1,6 @@
 from functools import lru_cache
 
 import torch
-import torch.nn.functional as F
 from transformers import AutoTokenizer
 
 from .encoder import LitSentenceEncoder
@@ -32,11 +31,8 @@ class Scorer:
         inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
         with torch.no_grad():
             outputs = self.model(**inputs, return_dict=True)
-
             query_embedding = outputs.last_hidden_state[0:1]
-            query_attention_mask = inputs['attention_mask'][0:1]
             sample_embedding = outputs.last_hidden_state[1:2]
-            sample_attention_mask = inputs['attention_mask'][1:2]
             similarity = self.model.compute_sentence_similarity(
-                query_embedding, sample_embedding, query_attention_mask, sample_attention_mask)
+                query_embedding, sample_embedding)
         return similarity.item()
