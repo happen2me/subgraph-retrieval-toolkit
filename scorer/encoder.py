@@ -52,13 +52,13 @@ class LitSentenceEncoder(pl.LightningModule):
         is computed between the pooled query and target(s) embeddings. 
         
         Args:
-            query: [batch_size, 1, seq_len, embedding_dim]
+            query: [..., 1, seq_len, embedding_dim]
                 query sentence embedding
-            target: [batch_size, k, seq_len, embedding_dim]
+            target: [..., k, seq_len, embedding_dim]
                 target sentence(s) embedding
 
         Returns:
-            similarity: [batch_size, k]
+            similarity: [..., k]
         """        
         embeddings = torch.cat([query, target], dim=-3)  # [..., 1 + k, seq_len, embedding_dim]
         embeddings = self.cls_pool(embeddings) # [..., 1 + k, embedding_dim]
