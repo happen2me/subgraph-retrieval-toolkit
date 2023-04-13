@@ -10,12 +10,12 @@ class Freebase(KnowledgeGraphBase):
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX ns: <http://rdf.freebase.com/ns/>
         """
-  
+
     def __init__(self, endpoint, prepend_prefixes=True) -> None:
         self.sparql = SPARQLWrapper(endpoint)
         self.sparql.setReturnFormat(JSON)
         self.prepend_prefixes = prepend_prefixes
-    
+
     def queryFreebase(self, query):
         if self.prepend_prefixes:
             query = self.PREFIXES + query
@@ -35,6 +35,7 @@ class Freebase(KnowledgeGraphBase):
         """Get id from uri."""
         return uri.split('/')[-1]
 
+    @lru_cache
     def search_one_hop_relations(self, src, dst):
         """Search one hop relation between src and dst.
         
@@ -56,6 +57,7 @@ class Freebase(KnowledgeGraphBase):
         paths = [[path['r1']['value']] for path in paths]
         return paths
 
+    @lru_cache
     def search_two_hop_relations(self, src, dst):
         query = f"""
             SELECT distinct ?r1 ?r2 where {{
@@ -194,6 +196,6 @@ class Freebase(KnowledgeGraphBase):
                 ns:{identifier} rdfs:label ?label .
                 FILTER (langMatches(lang(?label), "EN"))
             }} LIMIT 1
-            """ 
+            """
         results = self.queryFreebase(query)
         return results[0]['label']['value'] if results else None
