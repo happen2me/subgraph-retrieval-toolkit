@@ -1,6 +1,6 @@
-# subgraph-retrieval-wikidata
+# Subgraph Retrieval Toolkit
 
-[![Tests](https://github.com/happen2me/subgraph-retrieval-wikidata/actions/workflows/pytest.yml/badge.svg)](https://github.com/happen2me/subgraph-retrieval-wikidata/actions/workflows/pytest/badge.svg)
+[![Tests](https://github.com/happen2me/subgraph-retrieval-wikidata/actions/workflows/pytest.yml/badge.svg)]()
 
 Retrieve subgraphs on Wikidata. The method is based on this [retrieval work](https://github.com/RUCKBReasoning/SubgraphRetrievalKBQA) for Freebase.
 
@@ -11,7 +11,9 @@ Retrieve subgraphs on Wikidata. The method is based on this [retrieval work](htt
 pip install requirements.txt
 ```
 
-### Deploy a Wikidata endpoint locally
+### Wikidata
+
+#### Deploy a Wikidata endpoint locally
 We use [qEndpoint](https://github.com/the-qa-company/qEndpoint) to spin up a Wikidata endpoint that
 contains a [Wikidata Truthy](https://www.wikidata.org/wiki/Wikidata:Database_download#RDF_dumps) dump.
 
@@ -30,9 +32,29 @@ contains a [Wikidata Truthy](https://www.wikidata.org/wiki/Wikidata:Database_dow
 
 Alternatively, you can also use an [online Wikidata endpoint](https://query.wikidata.org), e.g. `https://query.wikidata.org/sparql`
 
-### Deploy a REL endpoint for entity linking (only necessary for end-to-end inference)
+
+#### Deploy a REL endpoint for entity linking (only necessary for end-to-end inference)
 
 Please refer to this tutorial for REL endpoint deployment: [End-to-End Entity Linking](https://rel.readthedocs.io/en/latest/tutorials/e2e_entity_linking/)
+
+### Freebase
+
+#### Deploy a Freebase endpoint locally
+
+Please refer to [dki-lab/Freebase-Setup](https://github.com/dki-lab/Freebase-Setup) for the setup.
+
+```bash
+# Download Freebase dump
+wget https://www.dropbox.com/s/q38g0fwx1a3lz8q/virtuoso_db.zip
+unzip virtuoso_db.zip && rm virtuoso_db.zip
+# Download virtuoso binary
+wget https://kumisystems.dl.sourceforge.net/project/virtuoso/virtuoso/7.2.5/virtuoso-opensource.x86_64-generic_glibc25-linux-gnu.tar.gz
+tar -zxvf virtuoso-opensource.x86_64-generic_glibc25-linux-gnu.tar.gz && rm virtuoso-opensource.x86_64-generic_glibc25-linux-gnu.tar.gz
+# Replace the virtuoso path in virtuoso.py
+sed -i 's/\/home\/dki_lab\/tools\/virtuoso\/virtuoso-opensource/\.\/virtuoso-opensource/g' virtuoso.py
+# Start virtuoso
+python3 virtuoso.py start 3001 -d virtuoso_db
+```
 
 
 ## Retrieve subgraphs with a trained scorer
@@ -46,9 +68,10 @@ path, please ensure the tokenizer is also saved along with the model.
 
 ## Visualize retrieved subgraph
 ```bash
-python visualize.py --wikidata-endpoint WIKIDATA_ENDPOINT \
-	--input data/subgraph.jsonl \
-	--output-dir ./htmls/
+python visualize.py --sparql-endpoint WIKIDATA_ENDPOINT \
+    --knowledge-graph wikidata \
+    --input data/subgraph.jsonl \
+    --output-dir ./htmls/
 ```
 
 ## Train a scorer
@@ -80,19 +103,21 @@ The model is trained in a distant supervised learning fashion. Given the questio
 2. Search paths between the question and the answer entities.
 
     ```bash
-    python preprocess/search_path.py --wikidata-endpoint WIKIDATA_ENDPOINT \
-    	--ground-path data/grounded.jsonl \
-    	--output-path data/paths.jsonl \
-    	--remove-sample-without-path
+    python preprocess/search_path.py --sparql-endpoint WIKIDATA_ENDPOINT \
+        --knowledge-graph wikidata \
+        --ground-path data/grounded.jsonl \
+        --output-path data/paths.jsonl \
+        --remove-sample-without-path
     ```
 3. Score the paths.
 
     The paths are scored with their Jaccard index with the answer. If the deduced entities is a closer set with the ground-truth answer entities, it will be assigned a higher score.
     
     ```bash
-    python preprocess/score_path.py --wikidata-endpoint WIKIDATA_ENDPOINT \
-    	--paths-file data/paths.jsonl \
-    	--output-path data/paths_scored.jsonl
+    python preprocess/score_path.py --sparql-endpoint WIKIDATA_ENDPOINT \
+        --knowledge-graph wikidata \
+        --paths-file data/paths.jsonl \
+        --output-path data/paths_scored.jsonl
     ```
 4. Negative sampling.
     
@@ -102,7 +127,7 @@ The model is trained in a distant supervised learning fashion. Given the questio
     python preprocess/negative_sampling.py \
         --scored-path-file data/paths_scored.jsonl \
         --output-file data/train.jsonl \
-        --wikidata-endpoint WIKIDATA_ENDPOINT
+        --sparql-endpoint WIKIDATA_ENDPOINT
     ```
 
 ### Train a sentence encoder
@@ -111,6 +136,6 @@ The scorer should be initialized from a pretrained encoder model from huggingfac
 
 ```bash
 python train.py --data-file data/train.jsonl \
-	--model-name-or-path intfloat/e5-small \
-	--save-model-path artifacts/scorer
+    --model-name-or-path intfloat/e5-small \
+    --save-model-path artifacts/scorer
 ```
