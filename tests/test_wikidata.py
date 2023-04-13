@@ -53,7 +53,7 @@ def test_get_neighbor_relations():
     # The wikidata endpoint is re-initialized to avoid caching
     wikidata = Wikidata(WIKIDATA_ENDPOINT, prepend_prefixes=False, exclude_qualifiers=False)
     # Test exclude_qualifiers=False
-    relations = wikidata.get_neighbor_relations(src, hop=1, limit=200)
+    relations = wikidata.get_neighbor_relations(src, hop=1, limit=200, ignore_cache=True)
     assert "P571" in relations, "inception should be present when qualifiers are not excluded"
 
 def test_deduce_leaves_from_multiple_srcs(wikidata: Wikidata):
