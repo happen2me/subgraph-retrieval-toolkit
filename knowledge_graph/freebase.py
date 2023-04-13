@@ -34,8 +34,17 @@ class Freebase(KnowledgeGraphBase):
     def get_id_from_uri(uri):
         """Get id from uri."""
         return uri.split('/')[-1]
-    
+
     def search_one_hop_relations(self, src, dst):
+        """Search one hop relation between src and dst.
+        
+        Args:
+            src (str): source entity
+            dst (str): destination entity
+        
+        Returns:
+            list[list[str]]: list of paths, each path is a list of PIDs
+        """
         query = f"""
             SELECT distinct ?r1 where {{
                 ns:{src} ?r1_ ns:{dst} . 
@@ -43,8 +52,9 @@ class Freebase(KnowledgeGraphBase):
                 BIND(STRAFTER(STR(?r1_),str(ns:)) AS ?r1)
             }}
         """
-        results = self.queryFreebase(query)
-        return [(i['r1']['value']) for i in results]
+        paths = self.queryFreebase(query)
+        paths = [[path['r1']['value']] for path in paths]
+        return paths
 
     def search_two_hop_relations(self, src, dst):
         query = f"""
@@ -54,12 +64,15 @@ class Freebase(KnowledgeGraphBase):
                 FILTER REGEX(?e1, "http://rdf.freebase.com/ns/")
                 FILTER REGEX(?r1_, "http://rdf.freebase.com/ns/")
                 FILTER REGEX(?r2_, "http://rdf.freebase.com/ns/")
+                FILTER (?r1_ != <http://rdf.freebase.com/ns/type.object.type>)
+                FILTER (?r2_ != <http://rdf.freebase.com/ns/type.object.type>)
                 BIND(STRAFTER(STR(?r1_),str(ns:)) AS ?r1)
                 BIND(STRAFTER(STR(?r2_),str(ns:)) AS ?r2)
             }}
         """
-        results = self.queryFreebase(query)
-        return [(i['r1']['value'], i['r2']['value']) for i in results]
+        paths = self.queryFreebase(query)
+        paths = [[path['r1']['value'], path['r2']['value']] for path in paths]
+        return paths
 
     @lru_cache
     def deduce_leaves(self, src, path, limit=2000):
@@ -79,7 +92,7 @@ class Freebase(KnowledgeGraphBase):
         if len(path) == 1:
             query = f"""
                 SELECT DISTINCT ?leaf WHERE {{
-                    {src} ns:{path[0]} ?t0_ . '
+                    ns:{src} ns:{path[0]} ?t0_ .
                     FILTER REGEX(?t0_, "http://rdf.freebase.com/ns/")
                     BIND(STRAFTER(STR(?t0_),STR(ns:)) AS ?leaf)
                 }} LIMIT {limit}
@@ -114,7 +127,7 @@ class Freebase(KnowledgeGraphBase):
         query = f"""
             SELECT DISTINCT ?leaf WHERE {{
                 VALUES ?src {{ns:{' ns:'.join(srcs)}}}
-                ?src ns:{path[0]} ?t0_ . '
+                ?src ns:{path[0]} ?t0_ .
                 FILTER REGEX(?t0_, "http://rdf.freebase.com/ns/")
                 BIND(STRAFTER(STR(?t0_),STR(ns:)) AS ?leaf)
             }} LIMIT {limit}
@@ -142,32 +155,45 @@ class Freebase(KnowledgeGraphBase):
                     ns:{src} ?r0_ ?t0 .
                     FILTER REGEX(?r0_, "http://rdf.freebase.com/ns/")
                     FILTER REGEX(?t0, "http://rdf.freebase.com/ns/")
+                    FILTER (?r0_ != <http://rdf.freebase.com/ns/type.object.type>)
                     BIND(STRAFTER(STR(?r0_),STR(ns:)) AS ?rel)
                 }} LIMIT {limit}
                 """
         elif hop == 2:
             query = f"""
-                SELECT DISTINCT ?rel WHERE {{
-                    ns:{src} ?r0_ ?t0 .
+                SELECT DISTINCT ?rel0, ?rel1 WHERE {{     
+                    {{
+                        SELECT DISTINCT ?t0, ?rel0 WHERE {{
+                        ns:{src} ?r0_ ?t0 .
+                        FILTER REGEX(?r0_, "http://rdf.freebase.com/ns/")
+                        FILTER REGEX(?t0, "http://rdf.freebase.com/ns/")
+                        FILTER (?r0_ != <http://rdf.freebase.com/ns/type.object.type>)
+                        BIND(STRAFTER(STR(?r0_),STR(ns:)) AS ?rel0)
+                        }} LIMIT 10
+                    }}
                     ?t0 ?r1_ ?t1 .
-                    FILTER REGEX(?r0_, "http://rdf.freebase.com/ns/")
-                    FILTER REGEX(?t0, "http://rdf.freebase.com/ns/")
                     FILTER REGEX(?r1_, "http://rdf.freebase.com/ns/")
                     FILTER REGEX(?t1, "http://rdf.freebase.com/ns/")
-                    BIND(STRAFTER(STR(?r1_),STR(ns:)) AS ?rel)
+                    FILTER (?r1_ != <http://rdf.freebase.com/ns/type.object.type>)
+                    BIND(STRAFTER(STR(?r1_),STR(ns:)) AS ?rel1)
                 }} LIMIT {limit}
                 """
         results = self.queryFreebase(query)
-        return [i['rel']['value'] for i in results if i['rel']['value'] != 'type.object.type']
+        if hop == 1:
+            paths = [path['rel']['value'] for path in results]
+        else:
+            paths = [(path['rel0']['value'], path['rel1']['value'])
+                     for path in results]
+        return paths
 
     @lru_cache
     def get_label(self, identifier):
         query = f"""
             SELECT ?label
             WHERE {{
-                {identifier} rdfs:label ?label .
+                ns:{identifier} rdfs:label ?label .
                 FILTER (langMatches(lang(?label), "EN"))
             }} LIMIT 1
-            """
+            """ 
         results = self.queryFreebase(query)
         return results[0]['label']['value'] if results else None
