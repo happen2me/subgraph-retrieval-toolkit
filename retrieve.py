@@ -17,7 +17,7 @@ from collections import namedtuple
 import srsly
 from tqdm import tqdm
 
-from knowledge_graph import Wikidata
+from knowledge_graph import KnowledgeGraphBase, Freebase, Wikidata
 from scorer import Scorer
 
 END_REL = 'END_REL'
@@ -33,7 +33,7 @@ Path = namedtuple('Path', ['last_nodes', 'prev_relations', 'score'],
                   defaults=[(), (), 0])
 
 
-def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_width, max_depth):
+def beam_search_path(kg: KnowledgeGraphBase, scorer, question, question_entities, beam_width, max_depth):
     """Beam search for paths."""
     # Each path is a tuple of (last_nodes, prev_relations, score, history_nodes)
     # When a relation is added, the last_nodes are updated by the new nodes that are connected to
@@ -45,7 +45,7 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
         new_paths = []
         for last_nodes, prev_relations, _ in paths:
             for last_node in last_nodes:
-                neighbor_relations = graph.get_neighbor_relations(
+                neighbor_relations = kg.get_neighbor_relations(
                     last_node, limit=beam_width)
                 neighbor_relations += [END_REL]
                 for relation in neighbor_relations:
@@ -53,14 +53,14 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
                     if relation == END_REL:
                         neighbor_nodes = ()
                     else:
-                        neighbor_nodes = tuple(graph.deduce_leaves(
+                        neighbor_nodes = tuple(kg.deduce_leaves(
                             last_node, (relation,), limit=beam_width))
-                    prev_relation_labels = tuple(graph.get_label(relation) or relation
+                    prev_relation_labels = tuple(kg.get_label(relation) or relation
                                                  for relation in prev_relations)
                     if relation == END_REL:
                         next_relation_label = END_REL
                     else:
-                        next_relation_label = graph.get_label(relation) or relation
+                        next_relation_label = kg.get_label(relation) or relation
                     score = scorer.score(question, prev_relation_labels, next_relation_label)
                     # new_prev_relations include the previous relation and the next relation, the scores
                     # of those with the same new_prev_relations should be the same.
@@ -75,7 +75,7 @@ def beam_search_path(graph: Wikidata, scorer, question, question_entities, beam_
     return paths
 
 
-def retrieve_triplets_from_relation_path(src, relation_path, graph: Wikidata, beam_width=10):
+def retrieve_triplets_from_relation_path(src, relation_path, kg: KnowledgeGraphBase, beam_width=10):
     """Retrieve entities and triplets from a path.
     Since each relation can have multiple entities, the retrieved triplets actually
     form a tree-like graph.
@@ -98,7 +98,7 @@ def retrieve_triplets_from_relation_path(src, relation_path, graph: Wikidata, be
         if relation == END_REL:
             continue
         for entity in tracked_entities:
-            leaves = graph.deduce_leaves(entity, (relation,), limit=beam_width)
+            leaves = kg.deduce_leaves(entity, (relation,), limit=beam_width)
             leaves = [leaf for leaf in leaves if leaf not in visited_entities]
             visited_entities.update(leaves)
             triplets += [(entity, relation, leaf) for leaf in leaves]
@@ -107,14 +107,14 @@ def retrieve_triplets_from_relation_path(src, relation_path, graph: Wikidata, be
     return triplets
 
 
-def retrieve_triplets_from_paths(src_entities, paths, graph: Wikidata):
+def retrieve_triplets_from_paths(src_entities, paths, kg: KnowledgeGraphBase):
     """Retrieve triplets as subgraphs from paths.
     """
     triplets = set()
     for src in src_entities:
         for path in paths:
             retrieved_triplets = retrieve_triplets_from_relation_path(
-                src, path.prev_relations, graph)
+                src, path.prev_relations, kg)
             triplets.update(retrieved_triplets)
     return list(triplets)
 
@@ -122,16 +122,19 @@ def retrieve_triplets_from_paths(src_entities, paths, graph: Wikidata):
 def main(args):
     groundings = srsly.read_jsonl(args.input)
     total = sum(1 for _ in srsly.read_jsonl(args.input))
-    wikidata = Wikidata(args.wikidata_endpoint)
+    if args.knowledge_graph == 'freebase':
+        knowledge_graph = Freebase(args.sparql_endpoint)
+    else:
+        knowledge_graph = Wikidata(args.sparql_endpoint)
     scorer = Scorer(args.scorer_model_path)
     outputs = []
     for ground in tqdm(groundings, total=total, desc='Retrieving subgraphs'):
         question = ground['question']
         question_entities = ground['question_entities']
         paths = beam_search_path(
-            wikidata, scorer, question, question_entities, args.beam_width, args.max_depth)
+            knowledge_graph, scorer, question, question_entities, args.beam_width, args.max_depth)
         triplets = retrieve_triplets_from_paths(
-            question_entities, paths, wikidata)
+            question_entities, paths, knowledge_graph)
         ground['triplets'] = triplets
         outputs.append(ground)
     srsly.write_jsonl(args.output_path, outputs)
@@ -139,13 +142,14 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wikidata-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
-                        help='endpoint of the wikidata sparql service')
+    parser.add_argument('--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
+                        help='endpoint of the wikidata or freebase sparql service')
+    parser.add_argument('-kg', '--knowledge-graph', type=str, choices=('wikidata', 'freebase'), default='wikidata')
     parser.add_argument('--scorer-model-path', type=str,
                         default='models/roberta-base', help='path to the scorer model')
-    parser.add_argument('--input', type=str, required=True,
+    parser.add_argument('-i', '--input', type=str, required=True,
                         help='path to the grounded qustions')
-    parser.add_argument('--output-path', type=str,
+    parser.add_argument('-o', '--output-path', type=str,
                         required=True, help='path to the output file')
     parser.add_argument('--beam-width', type=int, default=5,
                         help='beam width for beam search')

@@ -11,10 +11,10 @@ from pyvis.network import Network
 from tqdm import tqdm
 from bs4 import BeautifulSoup as Soup
 
-from knowledge_graph import Wikidata
+from knowledge_graph import KnowledgeGraphBase, Wikidata, Freebase
 
 
-def visualize_subgraph(sample, wikidata):
+def visualize_subgraph(sample, kg: KnowledgeGraphBase):
     """Visualize the subgraph. It returns an html string.
     """
     net = Network(directed=True, font_color='#000000')
@@ -23,14 +23,14 @@ def visualize_subgraph(sample, wikidata):
     answer_entities = sample['answer_entities'] if 'answer_entities' in sample else []
     # Add question entities even if they are not in the triplets
     for entity in question_entities:
-        net.add_node(entity, label=wikidata.get_label(entity), color='#114B7A')
+        net.add_node(entity, label=kg.get_label(entity), color='#114B7A')
     for triplet in sample['triplets']:
         subject, relation, obj = triplet
-        subject_label = wikidata.get_label(subject)
+        subject_label = kg.get_label(subject)
         subject_options = {'color':'#114B7A'} if subject in question_entities else {}
-        obj_label = wikidata.get_label(obj)
+        obj_label = kg.get_label(obj)
         obj_options = {'color':'#1B5E20'} if obj in answer_entities else {}
-        relation_label = wikidata.get_label(relation)
+        relation_label = kg.get_label(relation)
         net.add_node(subject, label=subject_label, **subject_options)
         net.add_node(obj, label=obj_label, **obj_options)
         net.add_edge(subject, obj, label=relation_label)
@@ -70,7 +70,10 @@ def add_text_to_html(html, text):
     
 
 def main(args):
-    wikidata = Wikidata(args.wikidata_endpoint)
+    if args.knowledge_graph == 'wikidata':
+        knowledge_graph = Wikidata(args.sparql_endpoint)
+    else:
+        knowledge_graph = Freebase(args.sparql_endpoint)
     samples = srsly.read_jsonl(args.input)
     total = sum(1 for _ in srsly.read_jsonl(args.input))
     total = min(total, args.max_output)
@@ -80,7 +83,7 @@ def main(args):
     for i, sample in enumerate(tqdm(samples, desc='Visualizing graphs', total=total)):
         if i >= args.max_output:
             break
-        html = visualize_subgraph(sample, wikidata)
+        html = visualize_subgraph(sample, knowledge_graph)
         text_to_append = f"Question: {sample['question']}"
         if 'answer' in sample:
             text_to_append += f"\n    Answer: {sample['answer']}"
@@ -93,10 +96,11 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wikidata-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
-                        help='endpoint of the wikidata sparql service')
-    parser.add_argument('--input', help='The input subgraph file path.')
-    parser.add_argument('--output-dir', help='The output directory path.')
+    parser.add_argument('--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
+                        help='endpoint of the wikidata or freebase sparql service')
+    parser.add_argument('-kg', '--knowledge-graph', type=str, choices=('wikidata', 'freebase'), default='wikidata')
+    parser.add_argument('-i', '--input', help='The input subgraph file path.')
+    parser.add_argument('-o', '--output-dir', help='The output directory path.')
     parser.add_argument('--max-output', type=int, default=1000, help='The maximum number of graphs to output.')
     args = parser.parse_args()
     main(args)
