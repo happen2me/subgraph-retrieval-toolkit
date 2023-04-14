@@ -34,6 +34,7 @@ class Wikidata(KnowledgeGraphBase):
         self.sparql.setReturnFormat(JSON)
         self.prepend_prefixes = prepend_prefixes
         self.exclude_qualifiers = exclude_qualifiers
+        self.name = 'wikidata'
 
     def queryWikidata(self, query):
         if self.prepend_prefixes:

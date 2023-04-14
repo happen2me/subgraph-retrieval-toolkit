@@ -15,6 +15,7 @@ class Freebase(KnowledgeGraphBase):
         self.sparql = SPARQLWrapper(endpoint)
         self.sparql.setReturnFormat(JSON)
         self.prepend_prefixes = prepend_prefixes
+        self.name = 'freebase'
 
     def queryFreebase(self, query):
         if self.prepend_prefixes:
