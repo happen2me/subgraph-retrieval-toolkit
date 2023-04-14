@@ -16,6 +16,7 @@ from collections import namedtuple
 from functools import cache
 
 import srsly
+import torch
 from tqdm import tqdm
 
 from knowledge_graph import KnowledgeGraphBase, Freebase, Wikidata
@@ -47,12 +48,12 @@ def beam_search_path(kg: KnowledgeGraphBase, scorer, question, question_entities
         for last_nodes, prev_relations, prev_score in paths:
             if prev_relations and prev_relations[-1] == END_REL:
                 continue
-            prev_relation_labels = tuple(kg.get_label(relation) or relation
+            prev_relation_labels = tuple(kg.get_relation_label(relation) or relation
                                          for relation in prev_relations)
             for last_node in last_nodes:
                 neighbor_relations = kg.get_neighbor_relations(last_node, limit=beam_width * 2)
                 neighbor_relations += [END_REL]
-                neighbor_relation_labels = tuple(kg.get_label(relation) or relation
+                neighbor_relation_labels = tuple(kg.get_relation_label(relation) or relation
                                             if relation != END_REL else END_REL
                                             for relation in neighbor_relations)
                 scores = scorer.batch_score(question, prev_relation_labels, neighbor_relation_labels)
@@ -97,9 +98,9 @@ def exhaustive_search_path(kg: KnowledgeGraphBase, scorer: Scorer, question, que
         for question_entity in question_entities:
             for _, prev_relations, prev_score in candidate_paths:
                 candidate_relations = expand_relations(question_entity, prev_relations)
-                prev_relation_labels = tuple(kg.get_label(relation) or relation
+                prev_relation_labels = tuple(kg.get_relation_label(relation) or relation
                                              for relation in prev_relations)
-                candidate_relation_labels = tuple(kg.get_label(relation) or relation
+                candidate_relation_labels = tuple(kg.get_relation_label(relation) or relation
                                                   for relation in candidate_relations)
                 scores = scorer.batch_score(question, prev_relation_labels,
                                             candidate_relation_labels)
@@ -171,7 +172,8 @@ def main(args):
         knowledge_graph = Freebase(args.sparql_endpoint)
     else:
         knowledge_graph = Wikidata(args.sparql_endpoint)
-    scorer = Scorer(args.scorer_model_path)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    scorer = Scorer(args.scorer_model_path, device)
     outputs = []
     for ground in tqdm(groundings, total=total, desc='Retrieving subgraphs'):
         question = ground['question']

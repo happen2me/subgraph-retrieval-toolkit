@@ -9,10 +9,12 @@ from .encoder import LitSentenceEncoder
 class Scorer:
     """Scorer for relation paths."""
 
-    def __init__(self, pretrained_name_or_path):
+    def __init__(self, pretrained_name_or_path, device=None):
         self.model = LitSentenceEncoder(pretrained_name_or_path)
         config = self.model.config
         self.tokenizer = AutoTokenizer.from_pretrained(config._name_or_path)
+        if device:
+            self.model = self.model.to(device)
 
     @lru_cache
     def score(self, question, prev_relations, next_relation):

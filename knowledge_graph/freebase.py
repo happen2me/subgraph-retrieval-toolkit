@@ -199,3 +199,7 @@ class Freebase(KnowledgeGraphBase):
             """
         results = self.queryFreebase(query)
         return results[0]['label']['value'] if results else None
+
+    def get_relation_label(self, relation):
+        """For freebase, relation label is the same as the relation identifier."""
+        return relation

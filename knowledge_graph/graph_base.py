@@ -73,3 +73,25 @@ class KnowledgeGraphBase:
             str: label of the entity or the relation
         """
         raise NotImplementedError
+
+    def get_relation_label(self, relation: str) -> str:
+        """Get the label of a relation. Defaults to get_label.
+
+        Args:
+            relation (str): relation identifier
+
+        Returns:
+            str: label of the relation
+        """
+        return self.get_label(relation)
+
+    def get_entity_label(self, entity: str) -> str:
+        """Get the label of an entity. Defaults to get_label.
+
+        Args:
+            entity (str): entity identifier
+
+        Returns:
+            str: label of the entity
+        """
+        return self.get_label(entity)
