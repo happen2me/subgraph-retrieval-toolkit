@@ -44,31 +44,30 @@ def beam_search_path(kg: KnowledgeGraphBase, scorer, question, question_entities
 
     for _ in range(max_depth):
         new_paths = []
-        for last_nodes, prev_relations, _ in paths:
+        for last_nodes, prev_relations, prev_score in paths:
             if prev_relations and prev_relations[-1] == END_REL:
                 continue
+            prev_relation_labels = tuple(kg.get_label(relation) or relation
+                                         for relation in prev_relations)
             for last_node in last_nodes:
                 neighbor_relations = kg.get_neighbor_relations(last_node, limit=beam_width * 2)
                 neighbor_relations += [END_REL]
-                for relation in neighbor_relations:
+                neighbor_relation_labels = tuple(kg.get_label(relation) or relation
+                                            if relation != END_REL else END_REL
+                                            for relation in neighbor_relations)
+                scores = scorer.batch_score(question, prev_relation_labels, neighbor_relation_labels)
+                for relation, score in zip(neighbor_relations, scores):
                     if relation == END_REL:
                         neighbor_nodes = ()
                     else:
                         neighbor_nodes = tuple(kg.deduce_leaves(
                             last_node, (relation,), limit=beam_width))
-                    prev_relation_labels = tuple(kg.get_label(relation) or relation
-                                                 for relation in prev_relations)
-                    if relation == END_REL:
-                        next_relation_label = END_REL
-                    else:
-                        next_relation_label = kg.get_label(relation) or relation
-                    score = scorer.score(question, prev_relation_labels, next_relation_label)
                     # new_prev_relations include the previous relation and the next relation, the scores
                     # of those with the same new_prev_relations should be the same.
                     new_prev_relations = prev_relations + (relation,)
                     new_path = Path(last_nodes=neighbor_nodes,
                                     prev_relations=new_prev_relations,
-                                    score=score)
+                                    score=score + prev_score)
                     new_paths.append(new_path)
 
         best_paths = heapq.nlargest(beam_width, new_paths + paths, key=lambda x: x.score)
@@ -177,7 +176,7 @@ def main(args):
     for ground in tqdm(groundings, total=total, desc='Retrieving subgraphs'):
         question = ground['question']
         question_entities = ground['question_entities']
-        paths = beam_search_path(
+        paths = exhaustive_search_path(
             knowledge_graph, scorer, question, question_entities, args.beam_width, args.max_depth)
         triplets = retrieve_triplets_from_paths(question_entities, paths, knowledge_graph)
         ground['triplets'] = triplets

@@ -44,14 +44,16 @@ Please refer to this tutorial for REL endpoint deployment: [End-to-End Entity Li
 Please refer to [dki-lab/Freebase-Setup](https://github.com/dki-lab/Freebase-Setup) for the setup.
 
 ```bash
-# Download Freebase dump
-wget https://www.dropbox.com/s/q38g0fwx1a3lz8q/virtuoso_db.zip
-unzip virtuoso_db.zip && rm virtuoso_db.zip
+# Download setup script
+git clone https://github.com/dki-lab/Freebase-Setup.git && cd Freebase-Setup
 # Download virtuoso binary
 wget https://kumisystems.dl.sourceforge.net/project/virtuoso/virtuoso/7.2.5/virtuoso-opensource.x86_64-generic_glibc25-linux-gnu.tar.gz
 tar -zxvf virtuoso-opensource.x86_64-generic_glibc25-linux-gnu.tar.gz && rm virtuoso-opensource.x86_64-generic_glibc25-linux-gnu.tar.gz
 # Replace the virtuoso path in virtuoso.py
 sed -i 's/\/home\/dki_lab\/tools\/virtuoso\/virtuoso-opensource/\.\/virtuoso-opensource/g' virtuoso.py
+# Download Freebase dump
+wget https://www.dropbox.com/s/q38g0fwx1a3lz8q/virtuoso_db.zip
+unzip virtuoso_db.zip && rm virtuoso_db.zip
 # Start virtuoso
 python3 virtuoso.py start 3001 -d virtuoso_db
 ```
