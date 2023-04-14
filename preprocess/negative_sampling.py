@@ -23,7 +23,7 @@ from tqdm import tqdm
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
 from knowledge_graph.wikidata import Wikidata
 
-END_REL = "END_REL"
+END_REL = "END OF HOP"
 
 
 def sample_negative_relations(soruce_entities, prev_path, positive_connections,

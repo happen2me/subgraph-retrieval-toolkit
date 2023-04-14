@@ -21,7 +21,7 @@ from tqdm import tqdm
 from knowledge_graph import KnowledgeGraphBase, Freebase, Wikidata
 from scorer import Scorer
 
-END_REL = 'END_REL'
+END_REL = 'END OF HOP'
 
 
 # Path collects the information at each traversal step
