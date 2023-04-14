@@ -12,8 +12,13 @@ python retrieve.py --scorer-model-path intfloat/e5-small --input data/ground.jso
 """
 import argparse
 import heapq
+import os
+import pathlib
 from collections import namedtuple
-from functools import cache
+try:
+    from functools import cache
+except ImportError:
+    from functools import lru_cache as cache
 
 import srsly
 import torch
@@ -183,6 +188,10 @@ def main(args):
         triplets = retrieve_triplets_from_paths(question_entities, paths, knowledge_graph)
         ground['triplets'] = triplets
         outputs.append(ground)
+    parent_dir = os.path.dirname(args.output_path)
+    if not os.path.exists(parent_dir):
+        pathlib.Path(parent_dir).mkdir(parents=True, exist_ok=True)
+        print(f'Created directory {parent_dir}')
     srsly.write_jsonl(args.output_path, outputs)
 
 
