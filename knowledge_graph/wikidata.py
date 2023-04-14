@@ -1,8 +1,11 @@
-from functools import lru_cache
+from diskcache import FanoutCache
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 from .graph_base import KnowledgeGraphBase
 
+
+fanout_cache = FanoutCache(shards=32)
+cache = fanout_cache.memoize()
 
 class Wikidata(KnowledgeGraphBase):
     PREFIXES: str = """PREFIX wd: <http://www.wikidata.org/entity/>
@@ -63,6 +66,7 @@ class Wikidata(KnowledgeGraphBase):
         """
         return f'FILTER(STRSTARTS(STR(?{var_name}), "{self.ENTITY_PREFIX}"))' if self.exclude_qualifiers else ''
 
+    @cache
     def search_one_hop_relations(self, src, dst):
         """Search one hop relation between src and dst.
         
@@ -83,6 +87,7 @@ class Wikidata(KnowledgeGraphBase):
         paths = [[self.get_pid_from_uri(path['r']['value'])] for path in paths]
         return paths
 
+    @cache
     def search_two_hop_relations(self, src, dst):
         """Search two hop relation between src and dst.
         
@@ -107,7 +112,7 @@ class Wikidata(KnowledgeGraphBase):
                  for path in paths]
         return paths
 
-    @lru_cache
+    @cache
     def deduce_leaves(self, src, path, limit=2000):
         """Deduce leave entities from source entity following the path.
         
@@ -176,7 +181,7 @@ class Wikidata(KnowledgeGraphBase):
         leaves = [leaf['x']['value'].split('/')[-1] for leaf in leaves]
         return leaves
 
-    @lru_cache
+    @cache
     def get_neighbor_relations(self, src, hop=1, limit=100):
         """Get all relations connected to an entity. The relations are
         limited to direct relations (those with wdt: prefix).
@@ -222,7 +227,7 @@ class Wikidata(KnowledgeGraphBase):
                          for relation in relations]
         return relations
 
-    @lru_cache
+    @cache
     def get_label(self, identifier):
         """Get label of an entity or a relation. If no label is found, return None.
 

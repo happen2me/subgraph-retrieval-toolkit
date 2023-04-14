@@ -1,8 +1,11 @@
-from functools import lru_cache
+from diskcache import FanoutCache
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 from .graph_base import KnowledgeGraphBase
 
+
+fanout_cache = FanoutCache(shards=32)
+cache = fanout_cache.memoize()
 
 class Freebase(KnowledgeGraphBase):
     PREFIXES: str = """
@@ -35,7 +38,7 @@ class Freebase(KnowledgeGraphBase):
         """Get id from uri."""
         return uri.split('/')[-1]
 
-    @lru_cache
+    @cache
     def search_one_hop_relations(self, src, dst):
         """Search one hop relation between src and dst.
         
@@ -57,7 +60,7 @@ class Freebase(KnowledgeGraphBase):
         paths = [[path['r1']['value']] for path in paths]
         return paths
 
-    @lru_cache
+    @cache
     def search_two_hop_relations(self, src, dst):
         query = f"""
             SELECT distinct ?r1 ?r2 where {{
@@ -76,7 +79,7 @@ class Freebase(KnowledgeGraphBase):
         paths = [[path['r1']['value'], path['r2']['value']] for path in paths]
         return paths
 
-    @lru_cache
+    @cache
     def deduce_leaves(self, src, path, limit=2000):
         """Deduce leave entities from source entity following the path.
         
@@ -137,7 +140,7 @@ class Freebase(KnowledgeGraphBase):
         results = self.queryFreebase(query)
         return [i['leaf']['value'] for i in results]
 
-    @lru_cache
+    @cache
     def get_neighbor_relations(self, src, hop=1, limit=100):
         """Get all relations connected to an entity. The relations are
         limited to direct relations (those with wdt: prefix).
@@ -188,7 +191,7 @@ class Freebase(KnowledgeGraphBase):
                      for path in results]
         return paths
 
-    @lru_cache
+    @cache
     def get_label(self, identifier):
         query = f"""
             SELECT ?label
