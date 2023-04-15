@@ -28,7 +28,12 @@ contains a [Wikidata Truthy](https://www.wikidata.org/wiki/Wikidata:Database_dow
     ```bash
     sudo docker start  qendpoint-wikidata
     ```
+- Add Wikidata prefixes support
 
+    ```bash
+    wget https://raw.githubusercontent.com/the-qa-company/qEndpoint/master/wikibase/prefixes.sparql
+    sudo docker cp prefixes.sparql qendpoint-wikidata:/app/qendpoint && rm prefixes.sparql
+    ```
 
 Alternatively, you can also use an [online Wikidata endpoint](https://query.wikidata.org), e.g. `https://query.wikidata.org/sparql`
 
