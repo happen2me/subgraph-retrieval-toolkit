@@ -89,7 +89,10 @@ class KnowledgeGraphTraverser:
 
 
 class Retriever:
-    '''Retriever is a class that retrieves subgraphs from a knowledge graph'''
+    '''Retriever retrieves subgraphs from a knowledge graph with a question and its
+    linked entities. The retrieval process takes the semantic information of the question
+    and the expanding path into consideration.
+    '''
     def __init__(self, kg: KnowledgeGraphBase, scorer: Scorer, beam_width: int, max_depth: int):
         self.kgh = KnowledgeGraphTraverser(kg)
         self.scorer = scorer
