@@ -32,13 +32,14 @@ def main(args):
     output_file = os.path.join(args.output_dir, 'train.jsonl')
     search_path_args = Namespace(sparql_endpoint=args.sparql_endpoint,
                                  knowledge_graph=args.knowledge_graph,
-                                 ground_path=args.ground_path,
+                                 ground_path=args.input_file,
                                  output_path=paths_file,
                                  remove_sample_without_path=True)
     score_path_args = Namespace(sparql_endpoint=args.sparql_endpoint,
                                 knowledge_graph=args.knowledge_graph,
                                 paths_file=paths_file,
-                                output_path=scores_file)
+                                output_path=scores_file,
+                                metric=args.metric,)
     negative_sampling_args = Namespace(sparql_endpoint=args.sparql_endpoint,
                                        knowledge_graph=args.knowledge_graph,
                                        scored_path_file=scores_file,
@@ -51,10 +52,18 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sparql-endpoint', type=str, required=True)
-    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('wikidata', 'freebase'))
-    parser.add_argument('--ground-path', type=str, required=True)
-    parser.add_argument('--output-dir', type=str, required=True)
-    parser.add_argument('--positive-threshold', type=float, default=0.5)
+    parser.add_argument('--sparql-endpoint', type=str, required=True,
+                        help="SPARQL endpoint URL for either Wikidata or Freebase (e.g., 'http://localhost:1234/api/endpoint/sparql' for default local qEndpoint)")
+    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('wikidata', 'freebase'),
+                        help='knowledge graph name, either wikidata or freebase')
+    parser.add_argument('-i', '--input-file', type=str, required=True,
+                        help='The grounded questions file with question, question & answer entities')
+    parser.add_argument('-o', '--output-dir', type=str, required=True, help='The output directory where the training train and the \
+                        data (paths, scores) will be saved.')
+    parser.add_argument('--metric', choices=('jaccard', 'recall'), default='jaccard',
+                        help='The metric used to score the paths. recall will usually result in a lager size of training dataset.')
+    parser.add_argument('--positive-threshold', type=float, default=0.5,
+                        help='The threshold to determine whether a path is positive or negative. The default value is 0.5.\
+                        If you want to use a larger training dataset, you can set this value to a smaller value.')
     args = parser.parse_args()
     main(args)

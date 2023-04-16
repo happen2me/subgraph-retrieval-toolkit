@@ -121,7 +121,7 @@ def sample_records_from_path(path, question, question_entities, positive_connect
     return records
 
 
-def get_positive_connections_along_paths(paths, path_scores, positive_threshold):
+def get_positive_connections_along_paths(paths):
     """Collect positive connections along paths. A positive connection is defined as
     {prev_relations: next_relation}. END_REL is added to the end of each path.
     
@@ -129,9 +129,7 @@ def get_positive_connections_along_paths(paths, path_scores, positive_threshold)
         dict: a dictionary of positive connections
     """
     positive_connections = defaultdict(set)
-    for path, score in zip(paths, path_scores):
-        if score < positive_threshold:
-            continue
+    for path in paths:
         path = path + [END_REL]
         for i, rel in enumerate(path):
             positive_connections[tuple(path[:i])].add(rel)
@@ -203,9 +201,14 @@ def main(args):
         question = sample['question']
         question_entities = sample['question_entities']
 
+        # Filter out paths with low scores.
+        paths = [path for path, score in zip(paths, path_scores) if score >= positive_threshold]
+        path_scores = [score for score in path_scores if score >= positive_threshold]
+        assert len(paths) == len(path_scores)
+
         # A dictionary of {prev_rels: {next_rel, next_rel, ...}, ...},
         # where prev_rels is a tuple of previous relations.
-        positive_connections = get_positive_connections_along_paths(paths, path_scores, positive_threshold)
+        positive_connections = get_positive_connections_along_paths(paths)
 
         for path in paths:
             train_records.extend(sample_records_from_path(path, question, question_entities,
@@ -214,7 +217,7 @@ def main(args):
     train_records = convert_records_relation_id_to_lable(train_records, kg)
     train_records = create_jsonl_dataset(train_records)
     srsly.write_jsonl(args.output_file, train_records)
-    print(f"Saved to {args.output_file}")
+    print(f"Training samples are saved to {args.output_file}")
 
 
 if __name__ == '__main__':

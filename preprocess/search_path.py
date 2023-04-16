@@ -75,9 +75,9 @@ def main(args):
             paths = list(filter(has_type_relation, paths))
         sample['paths'] = paths
         processed_samples.append(sample)
-    print(f'Processed {len(processed_samples)} samples, skipped {skipped} samples, total {total_samples} samples')
+    print(f'Processed {len(processed_samples)} samples; skipped {skipped} samples without any paths between question entities and answer entities; total {total_samples} samples')
     srsly.write_jsonl(args.output_path, processed_samples)
-    print(f'Output saved to {args.output_path}')
+    print(f'Retrieved paths saved to {args.output_path}')
 
 
 if __name__ == '__main__':

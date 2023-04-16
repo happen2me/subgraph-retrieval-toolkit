@@ -76,12 +76,12 @@ def main(args):
             # Personal note: this is weird, why don't you start from the question entity where the
             # path was originally found?
             path = tuple(path)  # this makes it hashable
-            score = max(score_path(kg, src, path, answer_entities, metric='jaccard') for src in question_entities)
+            score = max(score_path(kg, src, path, answer_entities, metric=args.metric) for src in question_entities)
             path_scores.append(score)
         sample['path_scores'] = path_scores
         processed_samples.append(sample)
     srsly.write_jsonl(args.output_path, processed_samples)
-    print(f'Output saved to {args.output_path}')
+    print(f'Scored paths saved to {args.output_path}')
 
 
 if __name__ == '__main__':
@@ -90,6 +90,7 @@ if __name__ == '__main__':
     parser.add_argument('-kg', '--knowledge-graph', default='wikidata', help='knowledge graph name')
     parser.add_argument('--paths-file', help='the file where the paths are stored')
     parser.add_argument('--output-path', help='the file where the scores are stored')
+    parser.add_argument('--metric', default='jaccard', choices=('jaccard', 'recall'), help='the metric used to score the paths')
     args = parser.parse_args()
 
     main(args)
