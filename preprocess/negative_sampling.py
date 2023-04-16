@@ -21,13 +21,13 @@ import srsly
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
-from knowledge_graph.wikidata import Wikidata
+from knowledge_graph import Wikidata, Freebase, KnowledgeGraphBase
 
 END_REL = "END OF HOP"
 
 
 def sample_negative_relations(soruce_entities, prev_path, positive_connections,
-                              num_negative, wikidata: Wikidata):
+                              num_negative, kg: KnowledgeGraphBase):
     """A helper function to sample negative relations.
     
     Args:
@@ -35,7 +35,7 @@ def sample_negative_relations(soruce_entities, prev_path, positive_connections,
         prev_path (list[str]): previous path / relations
         positive_connections (dict): a dictionary of positive connections
         num_negative (int): number of negative relations to sample
-        wikidata (Wikidata): a Wikidata instance
+        kg (KnowledgeGraphBase): a knoledge graph instance
         
     Returns:
         list[str]: list of negative relations
@@ -43,7 +43,7 @@ def sample_negative_relations(soruce_entities, prev_path, positive_connections,
     negative_relations = set()
     for src in soruce_entities:
         # get all relations connected to current tracked entities (question or intermediate entities)
-        negative_relations |= set(wikidata.get_neighbor_relations(src, limit=50))
+        negative_relations |= set(kg.get_neighbor_relations(src, limit=50))
         if len(negative_relations) > 100:  # yet another magic number :(
             break
     negative_relations = negative_relations - positive_connections[tuple(prev_path)]
@@ -53,13 +53,13 @@ def sample_negative_relations(soruce_entities, prev_path, positive_connections,
     return negative_relations
 
 
-def is_candidate_space_too_large(path, question_entities, wikidata, candidate_depth_multiplier=10):
+def is_candidate_space_too_large(path, question_entities, kg, candidate_depth_multiplier=5):
     """Check whether the number of the candidate entities along the path is too large.
     
     Args:
         path (list[str]): path from source entity to destination entity
         question_entities (list[str]): list of question entities
-        wikidata (Wikidata): a Wikidata instance
+        kg (KnowledgeGraphBase): a knowledge graph instance
         candidate_depth_multiplier (int, optional): a multiplier to control the number of candidate entities
             at each depth. Defaults to 10.
     """
@@ -70,7 +70,7 @@ def is_candidate_space_too_large(path, question_entities, wikidata, candidate_de
         limit = candidate_depth_multiplier ** i
         candidate_entities = set()
         for src in question_entities:
-            candidate_entities |= set(wikidata.deduce_leaves(src, prev_path, limit=limit))
+            candidate_entities |= set(kg.deduce_leaves(src, prev_path, limit=limit))
             # Stop early if the number of candidate entities is already very large
             if len(candidate_entities) > limit:
                 break
@@ -82,7 +82,7 @@ def is_candidate_space_too_large(path, question_entities, wikidata, candidate_de
 
 
 def sample_records_from_path(path, question, question_entities, positive_connections,
-                             wikidata, num_negative=15):
+                             kg, num_negative=15):
     """Sample training records from a path.
     
     Returns:
@@ -95,7 +95,7 @@ def sample_records_from_path(path, question, question_entities, positive_connect
     # My interpretation: If the number of candidate entities is too large, we simply discard this path.
     # But isn't it weird? The author checks the number of connected entities to the question entities
     # with each relation along the path, and simply discard those paths with too many connected entities.
-    if is_candidate_space_too_large(path, question_entities, wikidata, candidate_depth_multiplier=5):
+    if is_candidate_space_too_large(path, question_entities, kg, candidate_depth_multiplier=5):
         return []
 
     path = path + [END_REL]
@@ -105,7 +105,7 @@ def sample_records_from_path(path, question, question_entities, positive_connect
     for i, current_relation in enumerate(path):
         prev_path = path[:i]
         negative_relations = sample_negative_relations(tracked_entities, prev_path, positive_connections,
-                                                       num_negative, wikidata)
+                                                       num_negative, kg)
         if len(negative_relations) == 0:
             continue
         record = {
@@ -117,7 +117,7 @@ def sample_records_from_path(path, question, question_entities, positive_connect
         records.append(record)
         if current_relation != END_REL:
             # update tracked entities
-            tracked_entities = wikidata.deduce_leaves_from_multiple_srcs(tracked_entities, [current_relation], limit=100)
+            tracked_entities = kg.deduce_leaves_from_multiple_srcs(tracked_entities, [current_relation], limit=100)
     return records
 
 
@@ -138,7 +138,7 @@ def get_positive_connections_along_paths(paths, path_scores, positive_threshold)
     return positive_connections
 
 
-def convert_records_relation_id_to_lable(records, wikidata):
+def convert_records_relation_id_to_lable(records, kg):
     """Convert relation ids to relation labels in each record.
     """
     processed_records = []
@@ -147,7 +147,7 @@ def convert_records_relation_id_to_lable(records, wikidata):
     def get_label(rel):
         if rel == END_REL:
             return END_REL
-        return wikidata.get_label(rel) or rel
+        return kg.get_relation_label(rel) or rel
 
     for record in tqdm(records, desc='Converting relation ids to labels'):
         record['prev_path'] = [get_label(rel) for rel in record['prev_path']]
@@ -181,7 +181,10 @@ def create_jsonl_dataset(records):
 
 
 def main(args):
-    wikidata = Wikidata(args.wikidata_endpoint)
+    if args.knowledge_graph == 'freebase':
+        kg = Freebase(args.sparql_endpoint)
+    else:
+        kg = Wikidata(args.sparql_endpoint)
     positive_threshold = args.positive_threshold
     # Each sample has the following fields:
     # - id: sample id
@@ -206,9 +209,9 @@ def main(args):
 
         for path in paths:
             train_records.extend(sample_records_from_path(path, question, question_entities,
-                                                          positive_connections, wikidata))
+                                                          positive_connections, kg))
     print(f"Number of training records: {len(train_records)}")
-    train_records = convert_records_relation_id_to_lable(train_records, wikidata)
+    train_records = convert_records_relation_id_to_lable(train_records, kg)
     train_records = create_jsonl_dataset(train_records)
     srsly.write_jsonl(args.output_file, train_records)
     print(f"Saved to {args.output_file}")
@@ -216,10 +219,11 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wikidata-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='wikidata endpoint')
+    parser.add_argument('--sparql-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='wikidata endpoint')
+    parser.add_argument('-kg', '--knowledge-graph', default='wikidata', help='knowledge graph name')
     parser.add_argument('--scored-path-file', help='The file containing scored paths')
     parser.add_argument('--output-file', help='The output file')
-    parser.add_argument('--positive-threshold', type=float, default=0.3, help='The threshold to determine whether a path is positive or negative')
+    parser.add_argument('--positive-threshold', type=float, default=0.5, help='The threshold to determine whether a path is positive or negative')
     args = parser.parse_args()
 
     main(args)

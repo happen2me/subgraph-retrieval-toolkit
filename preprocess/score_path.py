@@ -21,14 +21,14 @@ import srsly
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
-from knowledge_graph.wikidata import Wikidata
+from knowledge_graph import Wikidata, Freebase, KnowledgeGraphBase
 
 
-def score_path(kg, src, path, answers, metric='jaccard'):
+def score_path(kg: KnowledgeGraphBase, src, path, answers, metric='jaccard'):
     """Calculate the HIT score of a given path.
     
     Args:
-        kg (Wikidata): wikidata knowledge graph
+        kg (KnowledgeGraphBase): knowledge graph instance
         src (str): the source entity
         path (list): the path
         answers (list): the ground truth entities
@@ -53,7 +53,10 @@ def score_path(kg, src, path, answers, metric='jaccard'):
 
 
 def main(args):
-    wikidata = Wikidata(args.wikidata_endpoint)
+    if args.knowledge_graph == 'freebase':
+        kg = Freebase(args.sparql_endpoint)
+    else:
+        kg = Wikidata(args.sparql_endpoint)
     samples = srsly.read_jsonl(args.paths_file)
     total_lines = sum(1 for _ in srsly.read_jsonl(args.paths_file))
     processed_samples = []  # adds path_scores to each sample
@@ -73,7 +76,7 @@ def main(args):
             # Personal note: this is weird, why don't you start from the question entity where the
             # path was originally found?
             path = tuple(path)  # this makes it hashable
-            score = max(score_path(wikidata, src, path, answer_entities, metric='recall') for src in question_entities)
+            score = max(score_path(kg, src, path, answer_entities, metric='jaccard') for src in question_entities)
             path_scores.append(score)
         sample['path_scores'] = path_scores
         processed_samples.append(sample)
@@ -83,7 +86,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wikidata-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='wikidata endpoint')
+    parser.add_argument('--sparql-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='knowledge graph endpoint')
+    parser.add_argument('-kg', '--knowledge-graph', default='wikidata', help='knowledge graph name')
     parser.add_argument('--paths-file', help='the file where the paths are stored')
     parser.add_argument('--output-path', help='the file where the scores are stored')
     args = parser.parse_args()
