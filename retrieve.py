@@ -1,5 +1,6 @@
 import argparse
 import heapq
+import os
 from collections import namedtuple
 from typing import List, Any, Dict
 
@@ -193,6 +194,44 @@ class Retriever:
         return scored_paths
 
 
+def calculate_hit_and_miss(retrieved_path):
+    """Calculate the recall of answer entities in retrieved triplets,
+    if answer_entities exists in each sample.
+    """
+    retrieval = srsly.read_jsonl(retrieved_path)
+    hit = 0
+    miss = 0
+    for sample in retrieval:
+        if 'answer_entities' not in sample:
+            continue
+        answers = sample['answer_entities']
+        entities = set().union(*((triplet[0], triplet[-1]) for triplet in sample['triplets']))
+        if any([entity in answers for entity in entities]):
+            hit += 1
+        else:
+            miss += 1
+    return hit, miss
+
+
+def print_and_save_recall(retrieved_path):
+    """Calculate and print the recall of answer entities in retrieved triplets,
+    If any answer from the answer entities is in the retrieved entities, the sample
+    counts as a hit.
+    """
+    hit, miss = calculate_hit_and_miss(retrieved_path)
+    print(f"Answer recall: {hit / (hit + miss)} ({hit} / {hit + miss})")
+    info = {}
+    if hit + miss != 0:
+        info = {
+            'hit': hit,
+            'miss': miss,
+            'recall': hit / (hit + miss)
+        }
+    # path/to/subgraph.jsonl -> path/to/subgraph.metric
+    recall_path = os.path.splitext(retrieved_path)[0] + '.metric'
+    srsly.write_json(recall_path, info)
+
+
 def main(args):
     if args.knowledge_graph == 'freebase':
         kg = Freebase(args.sparql_endpoint)
@@ -207,7 +246,9 @@ def main(args):
         triplets = retriever.retrieve_subgraph_triplets(sample)
         sample['triplets'] = triplets
     srsly.write_jsonl(args.output_path, samples)
-    print(f'Saved to {args.output_path}')
+    print(f'Retrieved subgraphs saved to to {args.output_path}')
+    if args.save_recall:
+        print_and_save_recall(args.output_path)
 
 
 if __name__ == '__main__':
@@ -219,6 +260,8 @@ if __name__ == '__main__':
     parser.add_argument('--scorer-model-path', type=str, required=True, help='path to the scorer model')
     parser.add_argument('--beam-width', type=int, default=10, help='beam width for beam search')
     parser.add_argument('--max-depth', type=int, default=2, help='max depth for beam search')
+    parser.add_argument('--save-recall', action='store_true', help='save the recall of answer entities information\
+                        in retrieved triplets. It requires that `answer_entities` exists in the input jsonl.')
     args = parser.parse_args()
     if not args.sparql_endpoint:
         if args.knowledge_graph == 'freebase':
