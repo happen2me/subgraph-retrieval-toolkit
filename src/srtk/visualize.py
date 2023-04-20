@@ -11,7 +11,7 @@ from pyvis.network import Network
 from tqdm import tqdm
 from bs4 import BeautifulSoup as Soup
 
-from knowledge_graph import KnowledgeGraphBase, Wikidata, Freebase
+from .knowledge_graph import KnowledgeGraphBase, Wikidata, Freebase
 
 
 def visualize_subgraph(sample, kg: KnowledgeGraphBase):
@@ -94,13 +94,17 @@ def main(args):
     print(f'Visualized graphs outputted to {args.output_dir}.')
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def add_arguments(parser):
     parser.add_argument('--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
                         help='endpoint of the wikidata or freebase sparql service')
     parser.add_argument('-kg', '--knowledge-graph', type=str, choices=('wikidata', 'freebase'), default='wikidata')
     parser.add_argument('-i', '--input', help='The input subgraph file path.')
     parser.add_argument('-o', '--output-dir', help='The output directory path.')
     parser.add_argument('--max-output', type=int, default=1000, help='The maximum number of graphs to output.')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    add_arguments(parser)
     args = parser.parse_args()
     main(args)

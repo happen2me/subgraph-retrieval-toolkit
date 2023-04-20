@@ -13,6 +13,7 @@ mintaka.sh
 mkqa.sh
 tutorials/
 ugly_retrieve.py
+build.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

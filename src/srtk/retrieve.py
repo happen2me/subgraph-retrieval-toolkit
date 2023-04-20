@@ -8,8 +8,8 @@ import srsly
 import torch
 from tqdm import tqdm
 
-from knowledge_graph import Freebase, Wikidata, KnowledgeGraphBase
-from scorer import Scorer
+from .knowledge_graph import Freebase, Wikidata, KnowledgeGraphBase
+from .scorer import Scorer
 
 
 END_REL = 'END OF HOP'
@@ -251,8 +251,8 @@ def main(args):
         print_and_save_recall(args.output_path)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def add_arguments(parser):
+    """Add retrieve arguments to the parser in place."""
     parser.add_argument('--sparql-endpoint', type=str, help='endpoint of the wikidata or freebase sparql service')
     parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('freebase', 'wikidata'))
     parser.add_argument('-i', '--input', type=str, required=True, help='path to the input jsonl with question and grounded entities')
@@ -262,6 +262,11 @@ if __name__ == '__main__':
     parser.add_argument('--max-depth', type=int, default=2, help='max depth for beam search')
     parser.add_argument('--save-recall', action='store_true', help='save the recall of answer entities information\
                         in retrieved triplets. It requires that `answer_entities` exists in the input jsonl.')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    add_arguments(parser)
     args = parser.parse_args()
     if not args.sparql_endpoint:
         if args.knowledge_graph == 'freebase':

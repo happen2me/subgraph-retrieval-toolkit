@@ -21,9 +21,9 @@ import os
 import argparse
 from argparse import Namespace
 
-from preprocess.search_path import main as search_path
-from preprocess.score_path import main as score_path
-from preprocess.negative_sampling import main as negative_sampling
+from .preprocessing.search_path import main as search_path
+from .preprocessing.score_path import main as score_path
+from .preprocessing.negative_sampling import main as negative_sampling
 
 
 def main(args):
@@ -50,8 +50,8 @@ def main(args):
     negative_sampling(negative_sampling_args)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+def add_arguments(parser):
+    """Add preprocess arguments to a parser in place."""
     parser.add_argument('--sparql-endpoint', type=str, required=True,
                         help="SPARQL endpoint URL for either Wikidata or Freebase (e.g., 'http://localhost:1234/api/endpoint/sparql' for default local qEndpoint)")
     parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('wikidata', 'freebase'),
@@ -65,5 +65,10 @@ if __name__ == '__main__':
     parser.add_argument('--positive-threshold', type=float, default=0.5,
                         help='The threshold to determine whether a path is positive or negative. The default value is 0.5.\
                         If you want to use a larger training dataset, you can set this value to a smaller value.')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    add_arguments(parser)
     args = parser.parse_args()
     main(args)

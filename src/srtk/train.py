@@ -15,7 +15,7 @@ from lightning.pytorch.loggers import WandbLogger
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
-from scorer import LitSentenceEncoder
+from .scorer import LitSentenceEncoder
 
 
 def concate_all(example):
@@ -76,9 +76,8 @@ def main(args):
     tokenizer.save_pretrained(args.save_model_path)
 
 
-if __name__ == '__main__':
-    torch.set_float32_matmul_precision('medium')
-    parser = argparse.ArgumentParser()
+def add_arguments(parser):
+    """Add train arguments to a parser in place."""
     parser.add_argument('--data-file', default='data/retrieval/train.jsonl', help='train data')
     parser.add_argument('--model-name-or-path', default='intfloat/e5-small', help='pretrained model name or path')
     parser.add_argument('--batch-size', default=16, type=int, help='batch size')
@@ -86,6 +85,11 @@ if __name__ == '__main__':
     parser.add_argument('--accelerator', default='gpu', help='accelerator, can be cpu, gpu, or tpu')
     parser.add_argument('--save-model-path', default='artifacts/scorer', help='output model checkpoint path')
     parser.add_argument('--fast-dev-run', action='store_true')
+
+if __name__ == '__main__':
+    torch.set_float32_matmul_precision('medium')
+    parser = argparse.ArgumentParser()
+    add_arguments(parser)
     args = parser.parse_args()
 
     main(args)
