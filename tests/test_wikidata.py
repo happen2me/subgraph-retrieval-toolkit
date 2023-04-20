@@ -1,6 +1,6 @@
 import pytest
 
-from knowledge_graph import Wikidata
+from srtk.knowledge_graph import Wikidata
 
 WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
 

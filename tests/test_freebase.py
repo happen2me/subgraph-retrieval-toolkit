@@ -2,7 +2,7 @@ import requests
 
 import pytest
 
-from knowledge_graph import Freebase
+from srtk.knowledge_graph import Freebase
 
 FREEBASE_ENDPOINT = "http://localhost:3001/sparql"
 

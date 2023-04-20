@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from scorer import LitSentenceEncoder
+from srtk.scorer import LitSentenceEncoder
 
 
 @pytest.fixture

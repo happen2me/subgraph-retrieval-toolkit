@@ -1,5 +1,5 @@
 import pytest
-from scorer import Scorer
+from srtk.scorer import Scorer
 
 
 @pytest.fixture
