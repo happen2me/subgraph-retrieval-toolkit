@@ -6,9 +6,9 @@ Retrieve subgraphs on Wikidata. The method is based on this [retrieval work](htt
 
 ## Prerequisite
 
-### Install dependencies
+### Install SRTK
 ```bash
-pip install requirements.txt
+pip install srtk
 ```
 
 ### Wikidata
@@ -66,8 +66,12 @@ python3 virtuoso.py start 3001 -d virtuoso_db
 
 ## Retrieve subgraphs with a trained scorer
 ```bash
-python retrieve.py --scorer-model-path path/to/scorer --input data/ground.jsonl \
-    --output-path data/subgraph.jsonl --beam-width 10
+srtk retrieve --sparql-endpoint WIKIDATA_ENDPOINT \
+    -kg wikidata
+    --scorer-model-path path/to/scorer \
+    --input data/ground.jsonl \
+    --output-path data/subgraph.jsonl \
+    --beam-width 10
 ```
 
 The `scorer-model-path` argument can be any huggingface pretrained encoder model. If it is a local
@@ -75,7 +79,7 @@ path, please ensure the tokenizer is also saved along with the model.
 
 ## Visualize retrieved subgraph
 ```bash
-python visualize.py --sparql-endpoint WIKIDATA_ENDPOINT \
+srtk visualize --sparql-endpoint WIKIDATA_ENDPOINT \
     --knowledge-graph wikidata \
     --input data/subgraph.jsonl \
     --output-dir ./htmls/
@@ -107,42 +111,30 @@ The model is trained in a distant supervised learning fashion. Given the questio
       ]
     }
     ```
-2. Search paths between the question and the answer entities.
+2. Preprocess the samples with `srtk preprocess` command.
 
     ```bash
-    python preprocess/search_path.py --sparql-endpoint WIKIDATA_ENDPOINT \
-        --knowledge-graph wikidata \
-        --ground-path data/grounded.jsonl \
-        --output-path data/paths.jsonl \
-        --remove-sample-without-path
+    srtk preprocess --sparql-endpoint WIKIDATA_ENDPOINT \
+        -kg wikidata \
+        --input-file data/grounded.jsonl \
+        --output-dir data/retrieved --metric jaccard
     ```
-3. Score the paths.
 
-    The paths are scored with their Jaccard index with the answer. If the deduced entities is a closer set with the ground-truth answer entities, it will be assigned a higher score.
-    
-    ```bash
-    python preprocess/score_path.py --sparql-endpoint WIKIDATA_ENDPOINT \
-        --knowledge-graph wikidata \
-        --paths-file data/paths.jsonl \
-        --output-path data/paths_scored.jsonl
-    ```
-4. Negative sampling.
-    
-    At each expanding step, the negative samples are those false relations connected to the tracked entities. This step outputs the dataset for training as `train.jsonl`
-    
-    ```bash
-    python preprocess/negative_sampling.py \
-        --scored-path-file data/paths_scored.jsonl \
-        --output-file data/train.jsonl \
-        --sparql-endpoint WIKIDATA_ENDPOINT
-    ```
+    Under the hood, it does four things:
+
+    1. Find the shortest paths between the question entities and the answer entities.
+    2. Score the searched paths with Jaccard scores with the answers.
+    3. Negative sampling. At each expanding step, the negative samples are those false relations connected to the tracked entities.
+    4. Generate training dataset as a jsonl file.
+
+
 
 ### Train a sentence encoder
 
 The scorer should be initialized from a pretrained encoder model from huggingface hub. Here I used `intfloat/e5-small`, which is a checkpoint of the BERT model.
 
 ```bash
-python train.py --data-file data/train.jsonl \
+srtk train --data-file data/train.jsonl \
     --model-name-or-path intfloat/e5-small \
     --save-model-path artifacts/scorer
 ```
