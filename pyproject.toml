@@ -1,0 +1,22 @@
+[build-system]
+requires = ["flit_core>=3.4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "srtk_yuanchun"
+version = "0.0.1"
+authors = [
+  { name="Yuanchun Shen", email="y.c.shen@tum.de" },
+]
+description = "A toolkit for semantic-relevant subgraph retrieval from large-scale knowledge graphs."
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/happen2me/subgraph-retrieval-toolkit"
+"Bug Tracker" = "https://github.com/happen2me/subgraph-retrieval-toolkit/issues"

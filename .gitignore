@@ -3,6 +3,16 @@ artifacts/
 data/
 htmls/
 .vscode/
+dist/
+
+# Temporarily ignored
+compare-score.ipynb
+el.py
+examine.ipynb
+mintaka.sh
+mkqa.sh
+tutorials/
+ugly_retrieve.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
