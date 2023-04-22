@@ -1,6 +1,8 @@
 """Command-line interface for SRTK."""
 import argparse
 
+from .link_wikidata import add_arguments as add_link_wikidata_arguments
+from .link_wikidata import main as link_wikidata
 from .preprocess import add_arguments as add_preprocess_arguments
 from .preprocess import main as preprocess
 from .retrieve import add_arguments as add_retrieve_arguments
@@ -14,6 +16,10 @@ from .visualize import main as visualize
 def main():
     parser = argparse.ArgumentParser(description='SRTK: A toolkit for smantic-relevant subgraph retrieval')
     subparsers = parser.add_subparsers(help='sub-command help')
+
+    parser_link_wikidata = subparsers.add_parser('link-wikidata', help='link entities to Wikidata')
+    add_link_wikidata_arguments(parser_link_wikidata)
+    parser_link_wikidata.set_defaults(func=link_wikidata)
 
     parser_preprocess = subparsers.add_parser('preprocess', help='preprocess the data')
     add_preprocess_arguments(parser_preprocess)
