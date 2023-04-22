@@ -95,12 +95,16 @@ def main(args):
 
 
 def add_arguments(parser):
-    parser.add_argument('--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
-                        help='endpoint of the wikidata or freebase sparql service')
-    parser.add_argument('-kg', '--knowledge-graph', type=str, choices=('wikidata', 'freebase'), default='wikidata')
-    parser.add_argument('-i', '--input', help='The input subgraph file path.')
-    parser.add_argument('-o', '--output-dir', help='The output directory path.')
-    parser.add_argument('--max-output', type=int, default=1000, help='The maximum number of graphs to output.')
+    parser.description = 'Visualize the graph (represented as a set of triplets) using pyvis.'
+    parser.add_argument('-i', '--input', required=True, help='The input subgraph file path.')
+    parser.add_argument('-o', '--output-dir', required=True, help='The output directory path.')
+    parser.add_argument('-e', '--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
+                        help='SPARQL endpoint for Wikidata or Freebase services. In this step, it is used to get the labels of entities.\
+                        (Default: http://localhost:1234/api/endpoint/sparql)')
+    parser.add_argument('-kg', '--knowledge-graph', type=str, choices=('wikidata', 'freebase'), default='wikidata',
+                        help='The knowledge graph type to use. (Default: wikidata)')
+    parser.add_argument('--max-output', type=int, default=1000,
+                        help='The maximum number of graphs to output. This is useful for debugging. (Default: 1000)')
 
 
 if __name__ == '__main__':

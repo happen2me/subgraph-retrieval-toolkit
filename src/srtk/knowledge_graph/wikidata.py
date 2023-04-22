@@ -55,6 +55,16 @@ class Wikidata(KnowledgeGraphBase):
         """Get property id from uri."""
         return uri.split('/')[-1]
 
+    @staticmethod
+    def is_qid(qid):
+        """Check if qid is a valid Wikidata entity id."""
+        return qid.startswith('Q') and qid[1:].isdigit()
+
+    @staticmethod
+    def is_pid(pid):
+        """Check if pid is a valid Wikidata property id."""
+        return pid.startswith('P') and pid[1:].isdigit()
+
     def get_quantifier_filter(self, var_name):
         """Get quantifier filter string where the var is restricted to be entities.
         If exclude_qualifiers is set to False, return empty string.
@@ -74,6 +84,9 @@ class Wikidata(KnowledgeGraphBase):
         Returns:
             list[list[str]]: list of paths, each path is a list of PIDs
         """
+        if not self.is_qid(src) or not self.is_qid(dst):
+            return []
+
         query = f"""
             SELECT DISTINCT ?r WHERE {{
                 wd:{src} ?r wd:{dst}.
@@ -94,6 +107,9 @@ class Wikidata(KnowledgeGraphBase):
         Returns:
             list[list[str]]: list of paths, each path is a list of PIDs
         """
+        if not self.is_qid(src) or not self.is_qid(dst):
+            return []
+
         query = f"""
             SELECT DISTINCT ?r1 ?r2 WHERE {{
                 wd:{src} ?r1 ?x.
@@ -121,6 +137,9 @@ class Wikidata(KnowledgeGraphBase):
             list[str]: list of leaves. Each leaf is a QID.
         """
         assert len(path) < 3, f'Currenly only support paths with length less than 3, got {len(path)}'
+        if not self.is_qid(src):
+            return []
+
         if len(path) == 0:
             return [src]
         if len(path) == 1:
@@ -162,6 +181,10 @@ class Wikidata(KnowledgeGraphBase):
         assert len(path) < 2, f'Currenly only support paths with length less than 2, got {len(path)}'
         if len(path) == 0:
             return srcs
+        srcs = [src for src in srcs if self.is_qid(src)]
+        if len(srcs) == 0:
+            return []
+
         query = f"""
             SELECT DISTINCT ?x WHERE {{
                 VALUES ?src {{wd:{' wd:'.join(srcs)}}}
@@ -191,6 +214,9 @@ class Wikidata(KnowledgeGraphBase):
             list[str] | list[tuple(str,)]: list of relations. Each relation is a PID or a tuple of PIDs.
         """
         assert hop < 3, f'Currenly only support relations with hop less than 3, got {hop}'
+        if not self.is_qid(src):
+            return []
+
         if hop == 1:
             query = f"""SELECT DISTINCT ?rel WHERE {{
                 wd:{src} ?rel ?obj .
@@ -233,6 +259,9 @@ class Wikidata(KnowledgeGraphBase):
         Returns:
             str | None: label of the entity or relation
         """
+        if not self.is_qid(identifier) and not self.is_pid(identifier):
+            return identifier
+
         query = f"""
             SELECT ?label
                 WHERE {{

@@ -236,7 +236,7 @@ def main(args):
     if args.knowledge_graph == 'freebase':
         kg = Freebase(args.sparql_endpoint)
     else:
-        kg = Wikidata(args.sparql_endpoint)
+        kg = Wikidata(args.sparql_endpoint, exclude_qualifiers=not args.include_qualifiers)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     scorer = Scorer(args.scorer_model_path, device)
     retriever = Retriever(kg, scorer, args.beam_width, args.max_depth)
@@ -272,6 +272,8 @@ def add_arguments(parser):
     parser.add_argument('--beam-width', type=int, default=10, help='beam width for beam search (default: 10).')
     parser.add_argument('--max-depth', type=int, default=2, help='maximum depth for beam search (default: 2).')
     parser.add_argument('--save-recall', action='store_true', help='save recall information for answer entities in retrieved triplets. Requires `answer_entities` field in the input jsonl.')
+    parser.add_argument('--include-qualifiers', action='store_true', help='Include qualifiers from the retrieved triplets. Qualifiers are informations represented in non-entity form, like date, count etc.\
+                        This is only relevant for Wikidata.')
 
 
 if __name__ == '__main__':
