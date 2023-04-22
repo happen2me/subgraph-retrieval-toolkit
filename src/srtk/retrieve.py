@@ -245,23 +245,33 @@ def main(args):
     for sample in tqdm(samples, desc='Retrieving subgraphs', total=total):
         triplets = retriever.retrieve_subgraph_triplets(sample)
         sample['triplets'] = triplets
-    srsly.write_jsonl(args.output_path, samples)
-    print(f'Retrieved subgraphs saved to to {args.output_path}')
+    srsly.write_jsonl(args.output, samples)
+    print(f'Retrieved subgraphs saved to to {args.output}')
     if args.save_recall:
-        print_and_save_recall(args.output_path)
+        print_and_save_recall(args.output)
 
 
 def add_arguments(parser):
     """Add retrieve arguments to the parser in place."""
-    parser.add_argument('--sparql-endpoint', type=str, help='endpoint of the wikidata or freebase sparql service')
-    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('freebase', 'wikidata'))
-    parser.add_argument('-i', '--input', type=str, required=True, help='path to the input jsonl with question and grounded entities')
-    parser.add_argument('-o', '--output-path', type=str, required=True, help='path to the outputs with retrived triplets')
-    parser.add_argument('--scorer-model-path', type=str, required=True, help='path to the scorer model')
-    parser.add_argument('--beam-width', type=int, default=10, help='beam width for beam search')
-    parser.add_argument('--max-depth', type=int, default=2, help='max depth for beam search')
-    parser.add_argument('--save-recall', action='store_true', help='save the recall of answer entities information\
-                        in retrieved triplets. It requires that `answer_entities` exists in the input jsonl.')
+    parser.description = '''Retrieve subgraphs by utilizing a question and its associated grounded entities.
+
+    Provide a JSON file as input, where each JSON object must contain at least the 'question' and 'question_entities' fields.
+
+    The output JSONL file will include an added 'triplets' field, based on the input JSONL file. This field consists of a list of triplets,
+    with each triplet representing a (head, relation, tail) tuple.
+    '''
+    parser.add_argument('-i', '--input', type=str, required=True, help='input jsonl file path containing questions and grounded entities.')
+    parser.add_argument('-o', '--output', type=str, required=True, help='output file path for storing retrieved triplets.')
+    parser.add_argument('-e', '--sparql-endpoint', type=str, help='SPARQL endpoint for Wikidata or Freebase services.')
+    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('freebase', 'wikidata'),
+                        help='choose the knowledge graph: currently supports ``freebase`` and ``wikidata``.')
+    parser.add_argument('--scorer-model-path', type=str, required=True, help='Path to the scorer model, containing both the saved model and its tokenizer in the Huggingface models format.\
+                        Such a model is saved automatically when using the ``srtk train`` command.\
+                        Alternatively, provide a pre-trained model name from the Hugging Face model hub.\
+                        In practice it supports any Huggingface transformers encoder model, though models that do not use [CLS] tokens may require modifications on similarity function.')
+    parser.add_argument('--beam-width', type=int, default=10, help='beam width for beam search (default: 10).')
+    parser.add_argument('--max-depth', type=int, default=2, help='maximum depth for beam search (default: 2).')
+    parser.add_argument('--save-recall', action='store_true', help='save recall information for answer entities in retrieved triplets. Requires `answer_entities` field in the input jsonl.')
 
 
 if __name__ == '__main__':

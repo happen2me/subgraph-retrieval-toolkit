@@ -45,8 +45,8 @@ class Wikidata(KnowledgeGraphBase):
             ret = self.sparql.queryAndConvert()
             result = ret['results']['bindings']
         except Exception as exeption:
-            print(exeption)
             print(f'Failed executing query: {query}')
+            print(f'Exception: {exeption}')
             result = []
         return result
 
