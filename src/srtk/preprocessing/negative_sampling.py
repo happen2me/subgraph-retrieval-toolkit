@@ -82,7 +82,7 @@ def is_candidate_space_too_large(path, question_entities, kg, candidate_depth_mu
 
 
 def sample_records_from_path(path, question, question_entities, positive_connections,
-                             kg, num_negative=15):
+                             kg, num_negative):
     """Sample training records from a path.
     
     Returns:
@@ -212,7 +212,7 @@ def main(args):
 
         for path in paths:
             train_records.extend(sample_records_from_path(path, question, question_entities,
-                                                          positive_connections, kg))
+                                                          positive_connections, kg, args.num_negative))
     print(f"Number of training records: {len(train_records)}")
     train_records = convert_records_relation_id_to_lable(train_records, kg)
     train_records = create_jsonl_dataset(train_records)
@@ -227,6 +227,7 @@ if __name__ == '__main__':
     parser.add_argument('--scored-path-file', help='The file containing scored paths')
     parser.add_argument('--output-file', help='The output file')
     parser.add_argument('--positive-threshold', type=float, default=0.5, help='The threshold to determine whether a path is positive or negative')
+    parser.add_argument('--num-negative', type=int, default=15, help='The number of negative relations to sample for each positive relation')
     args = parser.parse_args()
 
     main(args)

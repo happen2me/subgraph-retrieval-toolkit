@@ -66,7 +66,7 @@ def main(args):
     # - question_entities: list of question entities
     # - answer_entities: list of answer entities
     # - paths: list of paths
-    for sample in tqdm(samples, total=total_lines):
+    for sample in tqdm(samples, total=total_lines, desc='Scoring paths'):
         question_entities = sample['question_entities']
         answer_entities = sample['answer_entities']
         paths = sample['paths']

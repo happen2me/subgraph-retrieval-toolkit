@@ -1,5 +1,14 @@
 """1. Load the dataset
-This program filters the grounded samples, removing those without any answer or question entity.
+This scripts provides an example of how to prepare the dataset. It filters the grounded samples,
+removing those without any answer or question entity.
+
+The example input contains the following fields:
+- id: the sample id
+- sent: the question
+- qc: the question entities
+- ac: the answer entities
+
+Example usage:
 
 - For Mintaka dataset, those without any answer entity are removed.
 $ python preprocess/load_dataset.py --dataset mintaka --ground-path data/preprocess/mintaka-ground-raw.jsonl --output-path data/preprocess/mintaka-ground.jsonl
