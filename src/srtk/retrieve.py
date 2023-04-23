@@ -1,3 +1,10 @@
+"""This script retrieves subgraphs from a knowledge graph according to a natural
+language query (usually a question).
+
+The expected fields of one sample are:
+- question: question text
+- question_entities: list of grounded question entities (ids)
+"""
 import argparse
 import heapq
 import os
