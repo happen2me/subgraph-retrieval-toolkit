@@ -1,63 +1,67 @@
-Python API
-====================
+# Python API
 
-Subpackages
------------
+## Subpackages
 
-.. toctree::
-   :maxdepth: 4
+```{toctree}
+:maxdepth: 4
 
-   srtk.knowledge_graph
-   srtk.preprocessing
-   srtk.scorer
+srtk.knowledge_graph
+srtk.preprocessing
+srtk.scorer
+```
 
-Submodules
-----------
+## Submodules
 
-srtk.link\_wikidata module
---------------------------
+## srtk.link_wikidata module
 
+```{eval-rst}
 .. automodule:: srtk.link_wikidata
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-srtk.preprocess module
-----------------------
+## srtk.preprocess module
 
+```{eval-rst}
 .. automodule:: srtk.preprocess
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-srtk.retrieve module
---------------------
+## srtk.retrieve module
 
+```{eval-rst}
 .. automodule:: srtk.retrieve
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-srtk.train module
------------------
+## srtk.train module
 
+```{eval-rst}
 .. automodule:: srtk.train
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-srtk.visualize module
----------------------
+## srtk.visualize module
 
+```{eval-rst}
 .. automodule:: srtk.visualize
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: srtk
    :members:
    :undoc-members:
    :show-inheritance:
+```
