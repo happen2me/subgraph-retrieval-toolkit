@@ -1,29 +1,30 @@
-srtk.scorer package
-===================
+# srtk.scorer package
 
-Submodules
-----------
+## Submodules
 
-srtk.scorer.encoder module
---------------------------
+## srtk.scorer.encoder module
 
+```{eval-rst}
 .. automodule:: srtk.scorer.encoder
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-srtk.scorer.scorer module
--------------------------
+## srtk.scorer.scorer module
 
+```{eval-rst}
 .. automodule:: srtk.scorer.scorer
    :members:
    :undoc-members:
    :show-inheritance:
+```
 
-Module contents
----------------
+## Module contents
 
+```{eval-rst}
 .. automodule:: srtk.scorer
    :members:
    :undoc-members:
    :show-inheritance:
+```
