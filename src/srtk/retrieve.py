@@ -1,9 +1,13 @@
 """This script retrieves subgraphs from a knowledge graph according to a natural
-language query (usually a question).
+language query (usually a question). This command can also be used to evaluate
+a trained retriever when the answer entities are known.
 
 The expected fields of one sample are:
 - question: question text
 - question_entities: list of grounded question entities (ids)
+
+For evaluation, the following field is also required:
+- answer_entities: list of grounded answer entities (ids)
 """
 import argparse
 import heapq
@@ -254,18 +258,21 @@ def main(args):
         sample['triplets'] = triplets
     srsly.write_jsonl(args.output, samples)
     print(f'Retrieved subgraphs saved to to {args.output}')
-    if args.save_recall:
+    if args.evaluate:
         print_and_save_recall(args.output)
 
 
 def add_arguments(parser):
     """Add retrieve arguments to the parser in place."""
-    parser.description = '''Retrieve subgraphs by utilizing a question and its associated grounded entities.
+    parser.description = '''Retrieve subgraphs with a trained model on a dataset that entities are linked.
+    This command can also be used to evaluate a trained retriever when the answer entities are known.
 
     Provide a JSON file as input, where each JSON object must contain at least the 'question' and 'question_entities' fields.
+    When ``--evaluate`` is set, the input JSON file must also contain the 'answer_entities' field.
 
     The output JSONL file will include an added 'triplets' field, based on the input JSONL file. This field consists of a list of triplets,
     with each triplet representing a (head, relation, tail) tuple.
+    When ``--evaluate`` is set, a metric file will also be saved to the same directory as the output JSONL file.
     '''
     parser.add_argument('-i', '--input', type=str, required=True, help='input jsonl file path containing questions and grounded entities.')
     parser.add_argument('-o', '--output', type=str, required=True, help='output file path for storing retrieved triplets.')
@@ -278,7 +285,10 @@ def add_arguments(parser):
                         In practice it supports any Huggingface transformers encoder model, though models that do not use [CLS] tokens may require modifications on similarity function.')
     parser.add_argument('--beam-width', type=int, default=10, help='beam width for beam search (default: 10).')
     parser.add_argument('--max-depth', type=int, default=2, help='maximum depth for beam search (default: 2).')
-    parser.add_argument('--save-recall', action='store_true', help='save recall information for answer entities in retrieved triplets. Requires `answer_entities` field in the input jsonl.')
+    parser.add_argument('--evaluate', action='store_true', help='Evaluate the retriever model. When the answer \
+                        entities are known, the recall can be evluated as the number of samples that any of the \
+                        answer entities are retrieved in the subgraph by the number of all samples. This equires \
+                        `answer_entities` field in the input jsonl.')
     parser.add_argument('--include-qualifiers', action='store_true', help='Include qualifiers from the retrieved triplets. Qualifiers are informations represented in non-entity form, like date, count etc.\
                         This is only relevant for Wikidata.')
 
