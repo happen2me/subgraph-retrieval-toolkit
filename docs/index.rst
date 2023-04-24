@@ -6,19 +6,29 @@
 Subgraph Retrieval Toolkit (SRTK)
 =================================
 
+The Subgraph Retrieval Toolkit (SRTK) is a Python-based toolkit for retrieving subgraphs from large-scale knowledge graphs. SRTK provides a unified interface to access multiple knowledge graphs, including Wikidata and Freebase, and ships with state-of-the-art subgraph retrieval algorithms.
+
+SRTK CLI Interface supports the following subcommands:
+
+- ``preprocess``: Preprocess a dataset for training a subgraph retrieval model.
+- ``train``: Train a subgraph retrieval model on a preprocessed dataset.
+- ``retrieve``: Retrieve a subgraph from a knowledge graph based on a query or set of queries.
+- ``visualize``: Visualize a retrieved subgraph using a graph visualization tool.
+- ``evaluate``: Evaluate a trained subgraph retrieval model on a test dataset.
+
+
+Besides, `srtk` can also be used as a python library.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Contents:
+
+   getting_started
+   cli
+   srtk
+
 
 .. automodule:: srtk
    :members:
    :undoc-members:
    :show-inheritance:
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
