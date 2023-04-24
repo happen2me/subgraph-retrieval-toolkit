@@ -5,6 +5,9 @@ htmls/
 .vscode/
 dist/
 
+# docs
+docs/_*
+
 # Temporarily ignored
 compare-score.ipynb
 el.py
