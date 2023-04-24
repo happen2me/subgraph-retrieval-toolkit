@@ -1,5 +1,5 @@
-srtk package
-============
+Python API
+====================
 
 Subpackages
 -----------

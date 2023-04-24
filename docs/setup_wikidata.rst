@@ -102,7 +102,7 @@ Setup Wikimapper
             gdown 1hbfaaotNrWP3ecqk8B1Wnhf1ARZRakb9
 
 SPARQL Endpoint
-===============
+---------------
 
 We use `qEndpoint <https://github.com/the-qa-company/qEndpoint>`__ to
 spin up a Wikidata endpoint that contains a `Wikidata
