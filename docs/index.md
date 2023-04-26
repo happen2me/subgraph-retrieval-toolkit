@@ -11,18 +11,22 @@ SRTK CLI Interface supports the following subcommands:
 
 - `preprocess`: Preprocess a dataset for training a subgraph retrieval model.
 - `train`: Train a subgraph retrieval model on a preprocessed dataset.
-- `retrieve`: Retrieve a subgraph from a knowledge graph based on a query or set of queries.
+- `retrieve`: Retrieve a semantic-relevant subgraph from a knowledge graph with a trained retriever. It can also be used to evaluate a trained retriever.
 - `visualize`: Visualize a retrieved subgraph using a graph visualization tool.
-- `evaluate`: Evaluate a trained subgraph retrieval model on a test dataset.
+
+```{toctree}
+:caption: 'Contents:'
+
+getting_started
+cli
+```
 
 Besides, `srtk` can also be used as a python library.
 
 ```{toctree}
-:caption: 'Contents:'
+:caption: Python API Reference
 :maxdepth: 2
 
-getting_started
-cli
 srtk
 ```
 
@@ -31,4 +35,10 @@ srtk
    :members:
    :undoc-members:
    :show-inheritance:
+```
+
+```{toctree}
+:caption: 'Tutorials'
+
+tutorials
 ```

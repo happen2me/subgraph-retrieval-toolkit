@@ -76,7 +76,7 @@ def main(args):
     tokenizer.save_pretrained(args.output_dir)
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add train arguments to a parser in place."""
     parser.add_argument('-i', '--input', default='data/retrieval/train.jsonl',
                         help='training data for the scorer. It should be a JSONL file with fields: query, positive, negatives')
@@ -96,7 +96,7 @@ def add_arguments(parser):
 if __name__ == '__main__':
     torch.set_float32_matmul_precision('medium')
     parser = argparse.ArgumentParser()
-    add_arguments(parser)
+    _add_arguments(parser)
     args = parser.parse_args()
 
     main(args)
