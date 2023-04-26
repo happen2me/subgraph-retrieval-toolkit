@@ -264,7 +264,7 @@ def main(args):
         print_and_save_recall(args.output)
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add retrieve arguments to the parser in place."""
     parser.description = '''Retrieve subgraphs with a trained model on a dataset that entities are linked.
     This command can also be used to evaluate a trained retriever when the answer entities are known.
@@ -301,7 +301,7 @@ def add_arguments(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    add_arguments(parser)
+    _add_arguments(parser)
     args = parser.parse_args()
     if not args.sparql_endpoint:
         if args.knowledge_graph == 'freebase':

@@ -1,57 +1,53 @@
-# srtk.preprocessing package
+srtk.preprocessing package
+==========================
 
-## Submodules
+Submodules
+----------
 
-## srtk.preprocessing.load_dataset module
+srtk.preprocessing.load\_dataset module
+---------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.preprocessing.load_dataset
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## srtk.preprocessing.merge_ground module
+srtk.preprocessing.merge\_ground module
+---------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.preprocessing.merge_ground
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## srtk.preprocessing.negative_sampling module
+srtk.preprocessing.negative\_sampling module
+--------------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.preprocessing.negative_sampling
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## srtk.preprocessing.score_path module
+srtk.preprocessing.score\_path module
+-------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.preprocessing.score_path
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## srtk.preprocessing.search_path module
+srtk.preprocessing.search\_path module
+--------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.preprocessing.search_path
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: srtk.preprocessing
    :members:
    :undoc-members:
    :show-inheritance:
-```

@@ -83,7 +83,7 @@ def main(args):
     print(f"Entity linking result saved to {args.output}")
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add entity linking arguments to the parser"""
     parser.description = '''Entity linking on Wikidata.
     The input is a jsonl file. The field of interest is specified by the argument --ground-on.
@@ -98,6 +98,6 @@ def add_arguments(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    add_arguments(parser)
+    _add_arguments(parser)
     args = parser.parse_args()
     main(args)

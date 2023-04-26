@@ -1,15 +1,15 @@
 """Command-line interface for SRTK."""
 import argparse
 
-from .link_wikidata import add_arguments as add_link_wikidata_arguments
+from .link_wikidata import _add_arguments as add_link_wikidata_arguments
 from .link_wikidata import main as link_wikidata
-from .preprocess import add_arguments as add_preprocess_arguments
+from .preprocess import _add_arguments as add_preprocess_arguments
 from .preprocess import main as preprocess
-from .retrieve import add_arguments as add_retrieve_arguments
+from .retrieve import _add_arguments as add_retrieve_arguments
 from .retrieve import main as retrieve
-from .train import add_arguments as add_train_arguments
+from .train import _add_arguments as add_train_arguments
 from .train import main as train
-from .visualize import add_arguments as add_visualize_arguments
+from .visualize import _add_arguments as add_visualize_arguments
 from .visualize import main as visualize
 
 

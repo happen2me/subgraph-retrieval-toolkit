@@ -1,39 +1,37 @@
-# srtk.knowledge_graph package
+srtk.knowledge\_graph package
+=============================
 
-## Submodules
+Submodules
+----------
 
-## srtk.knowledge_graph.freebase module
+srtk.knowledge\_graph.freebase module
+-------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.knowledge_graph.freebase
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## srtk.knowledge_graph.graph_base module
+srtk.knowledge\_graph.graph\_base module
+----------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.knowledge_graph.graph_base
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## srtk.knowledge_graph.wikidata module
+srtk.knowledge\_graph.wikidata module
+-------------------------------------
 
-```{eval-rst}
 .. automodule:: srtk.knowledge_graph.wikidata
    :members:
    :undoc-members:
    :show-inheritance:
-```
 
-## Module contents
+Module contents
+---------------
 
-```{eval-rst}
 .. automodule:: srtk.knowledge_graph
    :members:
    :undoc-members:
    :show-inheritance:
-```
