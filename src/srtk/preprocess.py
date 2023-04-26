@@ -64,7 +64,7 @@ def main(args):
     negative_sampling(negative_sampling_args)
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add preprocess arguments to a parser in place."""
     parser.description = 'Create the training data from the grounded questions.'
     parser.add_argument('-i', '--input', type=str, required=True,
@@ -93,6 +93,6 @@ def add_arguments(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    add_arguments(parser)
+    _add_arguments(parser)
     args = parser.parse_args()
     main(args)

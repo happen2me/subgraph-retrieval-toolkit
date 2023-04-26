@@ -83,7 +83,7 @@ def main(args):
     tokenizer.save_pretrained(args.output_dir)
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add train arguments to a parser in place."""
     parser.add_argument('-t', '--train-dataset', required=True,
                         help='path to the training dataset. It should be a JSONL file with fields: query, positive, negatives')
@@ -107,7 +107,7 @@ def add_arguments(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    add_arguments(parser)
+    _add_arguments(parser)
     args = parser.parse_args()
 
     main(args)

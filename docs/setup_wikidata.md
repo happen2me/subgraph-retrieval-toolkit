@@ -59,43 +59,43 @@ pip install radboud-el
 
 ### Setup Wikimapper
 
-> REL links text spans to Wikipedia article titles. We then need
-> [Wikimapper](https://github.com/jcklie/wikimapper) to further map
-> them to Wikidata IDs.
->
-> 1. Install Wikimapper using pip
->
->    ```bash
->    pip install wikimapper
->    ```
->
-> 2. Prepare Wikimapper database
->
->    - You can create your own database index. Please check [create
->      your own
->      index](https://github.com/jcklie/wikimapper#create-your-own-index).
->
->    - You can download the precomputed indices from Wikimapper’s
->      author (2019’s dump)
->
->      ```bash
->      mkdir resources/wikimapper && cd resources/wikimapper
->      wget https://public.ukp.informatik.tu-darmstadt.de/wikimapper/index_enwiki-20190420.db
->      ```
->
->    - Alternatively, you can download the index computed by
->      ourselves. They are newer (2023 Feb), and come with cased and
->      uncased variant.
->
->      ```bash
->      mkdir resources/wikimapper && cd resources/wikimapper
->      # They are hosted on google drive. gdown is a convenient gdrive download helper
->      pip install gdown
->      # index_enwiki-latest-cased.db
->      gdown 1yMdzP4inW9CW5YbRZYVvsZYANHAERipL
->      # index_enwiki-latest-uncased.db
->      gdown 1hbfaaotNrWP3ecqk8B1Wnhf1ARZRakb9
->      ```
+REL links text spans to Wikipedia article titles. We then need
+[Wikimapper](https://github.com/jcklie/wikimapper) to further map
+them to Wikidata IDs.
+
+1. Install Wikimapper using pip
+
+   ```bash
+   pip install wikimapper
+   ```
+
+2. Prepare Wikimapper database
+
+   - You can create your own database index. Please check [create
+     your own
+     index](https://github.com/jcklie/wikimapper#create-your-own-index).
+
+   - You can download the precomputed indices from Wikimapper’s
+     author (2019’s dump)
+
+     ```bash
+     mkdir resources/wikimapper && cd resources/wikimapper
+     wget https://public.ukp.informatik.tu-darmstadt.de/wikimapper/index_enwiki-20190420.db
+     ```
+
+   - Alternatively, you can download the index computed by
+     ourselves. They are newer (2023 Feb), and come with cased and
+     uncased variant.
+
+     ```bash
+     mkdir resources/wikimapper && cd resources/wikimapper
+     # They are hosted on google drive. gdown is a convenient gdrive download helper
+     pip install gdown
+     # index_enwiki-latest-cased.db
+     gdown 1yMdzP4inW9CW5YbRZYVvsZYANHAERipL
+     # index_enwiki-latest-uncased.db
+     gdown 1hbfaaotNrWP3ecqk8B1Wnhf1ARZRakb9
+     ```
 
 ## SPARQL Endpoint
 
