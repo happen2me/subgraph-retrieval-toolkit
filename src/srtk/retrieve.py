@@ -12,6 +12,7 @@ For evaluation, the following field is also required:
 import argparse
 import heapq
 import os
+import pathlib
 from collections import namedtuple
 from typing import List, Any, Dict
 
@@ -244,6 +245,7 @@ def print_and_save_recall(retrieved_path):
 
 
 def main(args):
+    pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
     if args.knowledge_graph == 'freebase':
         kg = Freebase(args.sparql_endpoint)
     else:
@@ -274,22 +276,26 @@ def add_arguments(parser):
     with each triplet representing a (head, relation, tail) tuple.
     When ``--evaluate`` is set, a metric file will also be saved to the same directory as the output JSONL file.
     '''
-    parser.add_argument('-i', '--input', type=str, required=True, help='input jsonl file path containing questions and grounded entities.')
+    parser.add_argument('-i', '--input', type=str, required=True, help='path to input jsonl file. it should contain at least \
+                        ``question`` and ``question_entities`` fields.')
     parser.add_argument('-o', '--output', type=str, required=True, help='output file path for storing retrieved triplets.')
     parser.add_argument('-e', '--sparql-endpoint', type=str, help='SPARQL endpoint for Wikidata or Freebase services.')
     parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('freebase', 'wikidata'),
                         help='choose the knowledge graph: currently supports ``freebase`` and ``wikidata``.')
-    parser.add_argument('--scorer-model-path', type=str, required=True, help='Path to the scorer model, containing both the saved model and its tokenizer in the Huggingface models format.\
+    parser.add_argument('--scorer-model-path', type=str, required=True, help='Path to the scorer model, containing \
+                        both the saved model and its tokenizer in the Huggingface models format.\
                         Such a model is saved automatically when using the ``srtk train`` command.\
                         Alternatively, provide a pre-trained model name from the Hugging Face model hub.\
-                        In practice it supports any Huggingface transformers encoder model, though models that do not use [CLS] tokens may require modifications on similarity function.')
+                        In practice it supports any Huggingface transformers encoder model, though models that do not use [CLS] \
+                        tokens may require modifications on similarity function.')
     parser.add_argument('--beam-width', type=int, default=10, help='beam width for beam search (default: 10).')
     parser.add_argument('--max-depth', type=int, default=2, help='maximum depth for beam search (default: 2).')
     parser.add_argument('--evaluate', action='store_true', help='Evaluate the retriever model. When the answer \
                         entities are known, the recall can be evluated as the number of samples that any of the \
                         answer entities are retrieved in the subgraph by the number of all samples. This equires \
                         `answer_entities` field in the input jsonl.')
-    parser.add_argument('--include-qualifiers', action='store_true', help='Include qualifiers from the retrieved triplets. Qualifiers are informations represented in non-entity form, like date, count etc.\
+    parser.add_argument('--include-qualifiers', action='store_true', help='Include qualifiers from the retrieved triplets. \
+                        Qualifiers are informations represented in non-entity form, like date, count etc.\
                         This is only relevant for Wikidata.')
 
 
