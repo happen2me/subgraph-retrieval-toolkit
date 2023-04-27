@@ -216,8 +216,8 @@ def main(args):
     print(f"Number of training records: {len(train_records)}")
     train_records = convert_records_relation_id_to_lable(train_records, kg)
     train_records = create_jsonl_dataset(train_records)
-    srsly.write_jsonl(args.output_file, train_records)
-    print(f"Training samples are saved to {args.output_file}")
+    srsly.write_jsonl(args.output_path, train_records)
+    print(f"Training samples are saved to {args.output_path}")
 
 
 if __name__ == '__main__':
@@ -225,7 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('--sparql-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='wikidata endpoint')
     parser.add_argument('-kg', '--knowledge-graph', default='wikidata', help='knowledge graph name')
     parser.add_argument('--scored-path-file', help='The file containing scored paths')
-    parser.add_argument('--output-file', help='The output file')
+    parser.add_argument('--output-path', help='The path to the output file')
     parser.add_argument('--positive-threshold', type=float, default=0.5, help='The threshold to determine whether a path is positive or negative')
     parser.add_argument('--num-negative', type=int, default=15, help='The number of negative relations to sample for each positive relation')
     args = parser.parse_args()
