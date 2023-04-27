@@ -71,10 +71,10 @@ def prepare_dataloaders(train_data, validation_data, tokenizer, batch_size):
 
 def main(args):
     torch.set_float32_matmul_precision('medium')
-    model = LitSentenceEncoder(args.model_name_or_path)
+    model = LitSentenceEncoder(args.model_name_or_path, lr=args.learning_rate)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     train_loader, validation_loader = prepare_dataloaders(args.train_dataset, args.validation_dataset, tokenizer, args.batch_size)
-    day_hour = datetime.datetime.now().strftime('%d-%H')
+    day_hour = datetime.datetime.now().strftime('%m%d%H%M')
     wandb_logger = WandbLogger(project='retrieval', name=day_hour , group='contrastive', save_dir='artifacts')
     trainer = pl.Trainer(accelerator=args.accelerator, default_root_dir=args.output_dir,
                          fast_dev_run=args.fast_dev_run, max_epochs=args.max_epochs, logger=wandb_logger)
@@ -98,6 +98,7 @@ def add_arguments(parser):
                         help='pretrained model name or path. It is fully compatible with HuggingFace models.\
                         You can specify either a local path where a model is saved, or an encoder model identifier\
                         from huggingface hub. (default: intfloat/e5-small)')
+    parser.add_argument('-lr', '--learning-rate', default=5e-5, type=float, help='learning rate (default: 5e-5)')
     parser.add_argument('--batch-size', default=16, type=int, help='batch size (default: 16)')
     parser.add_argument('--max-epochs', default=10, type=int, help='max epochs (default: 10)')
     parser.add_argument('--accelerator', default='gpu', help='accelerator, can be cpu, gpu, or tpu (default: gpu)')

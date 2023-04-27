@@ -10,12 +10,13 @@ from transformers import AutoModel
 
 class LitSentenceEncoder(pl.LightningModule):
     """Lightning module """
-    def __init__(self, model_name_or_path, temperature=0.07):
+    def __init__(self, model_name_or_path, temperature=0.07, lr=5e-5):
         super().__init__()
         self.model = AutoModel.from_pretrained(model_name_or_path)
         self.config = self.model.config
         self.loss_fn = F.cross_entropy
         self.temperature = temperature
+        self.lr = lr
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -100,7 +101,7 @@ class LitSentenceEncoder(pl.LightningModule):
         return val_loss
 
     def configure_optimizers(self) :
-        return torch.optim.Adam(self.parameters(), lr=5e-5)
+        return torch.optim.Adam(self.parameters(), lr=self.lr)
 
     def save_huggingface_model(self, save_dir):
         """Will save the model, so you can reload it using `from_pretrained()`."""
