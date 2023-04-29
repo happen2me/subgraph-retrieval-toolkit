@@ -204,7 +204,8 @@ def main(args):
         # Filter out paths with low scores.
         paths = [path for path, score in zip(paths, path_scores) if score >= positive_threshold]
         path_scores = [score for score in path_scores if score >= positive_threshold]
-        assert len(paths) == len(path_scores)
+        if len(paths) != len(path_scores):
+            raise ValueError(f'The number of paths and path scores are not equal. {len(paths)} != {len(path_scores)}')
 
         # A dictionary of {prev_rels: {next_rel, next_rel, ...}, ...},
         # where prev_rels is a tuple of previous relations.

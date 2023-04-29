@@ -67,5 +67,6 @@ class Scorer:
             similarities = self.model.compute_sentence_similarity(
                 query_embedding, sample_embeddings)
             similarities = similarities.view(-1).tolist()
-            assert len(similarities) == len(next_relations)
+            if len(similarities) != len(next_relations):
+                raise ValueError(f"Sanity check failed: {len(similarities)} != {len(next_relations)}")
         return similarities

@@ -136,7 +136,8 @@ class Wikidata(KnowledgeGraphBase):
         Returns:
             list[str]: list of leaves. Each leaf is a QID.
         """
-        assert len(path) < 3, f'Currenly only support paths with length less than 3, got {len(path)}'
+        if len(path) >= 3:
+            raise NotImplementedError(f'Currenly only support paths with length less than 3, got {len(path)}')
         if not self.is_qid(src):
             return []
 
@@ -178,7 +179,8 @@ class Wikidata(KnowledgeGraphBase):
         Returns:
             list[str]: list of leaves. Each leaf is a QID.
         """
-        assert len(path) < 2, f'Currenly only support paths with length less than 2, got {len(path)}'
+        if len(path) >= 2:
+            raise NotImplementedError(f'Currenly only support paths with length less than 2, got {len(path)}')
         if len(path) == 0:
             return srcs
         srcs = [src for src in srcs if self.is_qid(src)]
@@ -213,7 +215,8 @@ class Wikidata(KnowledgeGraphBase):
         Returns:
             list[str] | list[tuple(str,)]: list of relations. Each relation is a PID or a tuple of PIDs.
         """
-        assert hop < 3, f'Currenly only support relations with hop less than 3, got {hop}'
+        if hop >= 3:
+            raise NotImplementedError(f'Currenly only support relations with hop less than 3, got {hop}')
         if not self.is_qid(src):
             return []
 

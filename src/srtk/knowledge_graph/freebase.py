@@ -89,7 +89,8 @@ class Freebase(KnowledgeGraphBase):
         Returns:
             list[str]: list of leaves. Each leaf is a QID.
         """
-        assert len(path) < 3, f'Currenly only support paths with length less than 3, got {len(path)}'
+        if len(path) >= 3:
+            raise NotImplementedError(f'Currenly only support paths with length less than 3, got {len(path)}')
         if len(path) == 0:
             return [src]
         if len(path) == 1:
@@ -124,7 +125,8 @@ class Freebase(KnowledgeGraphBase):
         Returns:
             list[str]: list of leaves. Each leaf is a QID.
         """
-        assert len(path) < 2, f'Currenly only support paths with length less than 2, got {len(path)}'
+        if len(path) >= 2:
+            raise NotImplementedError(f'Currenly only support paths with length less than 2, got {len(path)}')
         if len(path) == 0:
             return srcs
         query = f"""
@@ -151,7 +153,8 @@ class Freebase(KnowledgeGraphBase):
         Returns:
             list[str] | list[tuple(str,)]: list of relations. Each relation is a PID or a tuple of PIDs.
         """
-        assert hop < 3, f'Currenly only support relations with hop less than 3, got {hop}'
+        if hop >= 3:
+            raise NotImplementedError(f'Currenly only support relations with hop less than 3, got {hop}')
         if hop == 1:
             query = f"""
                 SELECT DISTINCT ?rel WHERE {{
