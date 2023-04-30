@@ -29,6 +29,8 @@ from .preprocessing.negative_sampling import main as negative_sampling
 
 def main(args):
     output_path = args.output
+    # Create parent dir for output if not exists.
+    Path(os.path.dirname(output_path)).mkdir(parents=True, exist_ok=True)
     if args.search_path:
         intermediate_dir = args.intermediate_dir
         if intermediate_dir is None:
