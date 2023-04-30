@@ -1,5 +1,6 @@
 # Subgraph Retrieval Toolkit
 
+[![PyPi](https://img.shields.io/pypi/v/srtk)](https://pypi.org/project/srtk/)
 [![PytestStatus](https://github.com/happen2me/subgraph-retrieval-wikidata/actions/workflows/pytest.yml/badge.svg)](https://github.com/happen2me/subgraph-retrieval-toolkit/actions/workflows/pytest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
