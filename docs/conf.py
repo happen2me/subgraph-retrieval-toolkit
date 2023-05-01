@@ -19,7 +19,8 @@ release = '0.0.1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 autodoc_mock_imports = ['beautifulsoup4', 'lightning', 'pyvis', 'SPARQLWrapper',
-                        'srsly', 'transformers', 'tqdm', 'torch']
+                        'srsly', 'transformers', 'tqdm', 'torch', 'datasets',
+                        'bs4', 'wikimapper']
 
 extensions = ['sphinx.ext.autodoc', 'myst_parser', 'sphinx.ext.napoleon']
 
