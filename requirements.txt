@@ -1,5 +1,6 @@
 beautifulsoup4
 lightning
+myst-parser
 pyvis
 SPARQLWrapper
 srsly
