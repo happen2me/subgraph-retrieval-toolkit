@@ -45,7 +45,8 @@ Options:
 srtk train
 --------------
 
-Train or evaluate a retriever model. For evaluate mode, make sure the `answer_entities` fields exist.
+Train a retriever model.
+
 
 Usage: 
 
