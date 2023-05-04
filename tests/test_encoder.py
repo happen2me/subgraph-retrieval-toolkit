@@ -9,13 +9,7 @@ def model():
     return LitSentenceEncoder('smallbenchnlp/roberta-small')
 
 
-def test_pooler(model):
-    if hasattr(model, 'average_pool'):
-        pooler = model.average_pool
-    elif hasattr(model, 'cls_pool'):
-        pooler = model.cls_pool
-    else:
-        pytest.skip('No pooler found')
+def examine_single_pooler(pooler):
     # Test pooler without batch size
     hidden_states = torch.randn(10, 256)
     attention_mask = torch.ones(10)
@@ -26,6 +20,18 @@ def test_pooler(model):
     attention_mask = torch.ones(2, 10)
     pooled = pooler(hidden_states, attention_mask)
     assert pooled.shape == (2, 256)
+
+def test_avg_pooler(model):
+    if hasattr(model, 'avg_pool'):
+        examine_single_pooler(model.avg_pool)
+    else:
+        pytest.skip('No avg pooler found')
+
+def test_cls_pooler(model):
+    if hasattr(model, 'cls_pool'):
+        examine_single_pooler(model.cls_pool)
+    else:
+        pytest.skip('No cls pooler found')
 
 def test_compute_sentence_similarity(model):
     # Test batched similarity

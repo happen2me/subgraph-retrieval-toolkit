@@ -43,11 +43,11 @@ class KnowledgeGraphTraverser:
         a relation path hop by hop.
 
         Args:
-            entity: the source node
-            path: a list of relations
+            entity (str): the identifier of the source node
+            path (list[str]): a list of relation identifiers
 
         Returns:
-            entities: a list of entities
+            entities: a list of entity identifiers
             triplets: a list of triplets
         '''
         entities, triplets = set(), set()
@@ -68,11 +68,11 @@ class KnowledgeGraphTraverser:
         """Deduce leaves from an entity following a path hop by hop.
 
         Args:
-            entity: the source node
-            path: a list of relations
+            entity (str): the identifier of the source node
+            path (list[str]): a list of relation identifiers
 
         Returns:
-            leaves: a list of leaves that are n-hop away from the source node,
+            set[str]: a set of leave identifiers that are n-hop away from the source node,
                 where n is the length of the path
         """
         leaves = set((entity,))
@@ -86,11 +86,11 @@ class KnowledgeGraphTraverser:
         """Deduce leaf relations from an entity following a path hop by hop.
 
         Args:
-            entity: the source node
-            path: a list of relations
+            entity (str): the identifier of the source node
+            path (list[str]): a list of relation identifiers
 
         Returns:
-            relations: a list of relations that are n-hop away from the source node,
+            tuple[str]: a tuple of relations that are n-hop away from the source node,
                 where n is the length of the path
         """
         leaves = self.deduce_leaves(entity, path)
@@ -99,6 +99,29 @@ class KnowledgeGraphTraverser:
         if self.kg.name == 'freebase':
             relations = [r for r in relations if r.split('.')[0] not in ['kg', 'common']]
         return tuple(relations)
+
+    def get_relation_label(self, identifier):
+        """Get the relation label of an entity or a relation.
+
+        It serves as a proxy to the knowledge graph's get_label function. For freebase,
+        we directly use the identifier as the label. For others, we return the retrieved
+        label if it exists, otherwise return the identifier.
+
+        Args:
+            identifier (str): the identifier of an entity or a relation
+
+        Returns:
+            str: the label of the entity or the relation
+        """
+        # For freebase, the relation identifier contains enough information
+        if self.kg.name == 'freebase':
+            return identifier
+        if identifier == END_REL:
+            return END_REL
+        label =  self.kg.get_label(identifier)
+        if label is None:
+            return identifier
+        return label
 
 
 class Retriever:
@@ -117,12 +140,12 @@ class Retriever:
         """Retrieve triplets as subgraphs from paths.
 
         Args:
-            sample: a sample from the dataset, which contains at least the following fields:
+            sample (dict): a sample from the dataset, which contains at least the following fields:
                 question: a string
                 question_entities: a list of entities
 
         Returns:
-            triplets: a list of triplets
+            list(tuple): a list of triplets
         """
         question = sample['question']
         triplets = []
@@ -147,11 +170,11 @@ class Retriever:
         question entities following a history path.
 
         Args:
-            question (str)
+            question (str): a natural language question
             question_entity (str): a grounded question entity
 
         Returns:
-            path_score_list (list[Path]): a list of (path, score) tuples
+            list[Path]: path score list, a list of (path, score) tuples
         '''
         candidate_paths = [Path()]  # path and its score
         result_paths = []
@@ -190,12 +213,14 @@ class Retriever:
             relations_batched (list[list[str]]): a list of next relations for each path
 
         Returns:
-            scored_paths (list[Path]): a list of newly expanded and scored paths
+            list[Path]: scored_paths, a list of newly expanded and scored paths
         '''
         scored_paths = []
         score_matrix = []
         for path, next_relations in zip(paths, relations_batched):
-            scores = self.scorer.batch_score(question, tuple(path.prev_relations), tuple(next_relations))
+            prev_relation_labels = tuple(self.kgh.get_relation_label(r) for r in path.prev_relations)
+            next_relation_labels = tuple(self.kgh.get_relation_label(r) for r in next_relations)
+            scores = self.scorer.batch_score(question, prev_relation_labels, next_relation_labels)
             score_matrix.append(scores)
 
         for i, (path, next_relations) in enumerate(zip(paths, relations_batched)):
@@ -209,6 +234,14 @@ class Retriever:
 def calculate_hit_and_miss(retrieved_path):
     """Calculate the recall of answer entities in retrieved triplets,
     if answer_entities exists in each sample.
+    
+    Args:
+        retrieved_path (str): path to the retrieved triplets
+    
+    Returns:
+        tuple(int, int): number of samples that have at least one answer entity in retrieved triplets,
+            and number of samples that have no answer entity in retrieved triplets
+        
     """
     retrieval = srsly.read_jsonl(retrieved_path)
     hit = 0

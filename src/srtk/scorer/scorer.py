@@ -10,9 +10,13 @@ class Scorer:
     """Scorer for relation paths."""
 
     def __init__(self, pretrained_name_or_path, device=None):
-        self.model = LitSentenceEncoder(pretrained_name_or_path)
-        config = self.model.config
-        self.tokenizer = AutoTokenizer.from_pretrained(config._name_or_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_name_or_path)
+        # Set pooling method to average if the model does not have a CLS token.
+        if self.tokenizer.cls_token is None:
+            pool_method = 'avg'
+        else:
+            pool_method = 'cls'
+        self.model = LitSentenceEncoder(pretrained_name_or_path, pool=pool_method)
         if device:
             self.model = self.model.to(device)
 
