@@ -10,13 +10,16 @@ from transformers import AutoModel
 
 class LitSentenceEncoder(pl.LightningModule):
     """Lightning module """
-    def __init__(self, model_name_or_path, temperature=0.07, lr=5e-5):
+    def __init__(self, model_name_or_path, temperature=0.07, lr=5e-5, pool='cls'):
+        if pool not in ['cls', 'avg']:
+            raise ValueError(f"pool method must be either cls or avg, got {pool}")
         super().__init__()
         self.model = AutoModel.from_pretrained(model_name_or_path)
         self.config = self.model.config
-        self.loss_fn = F.cross_entropy
         self.temperature = temperature
         self.lr = lr
+        self.pool_method = pool
+        self.loss_fn = F.cross_entropy
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -30,20 +33,37 @@ class LitSentenceEncoder(pl.LightningModule):
             last_hidden_states: [..., seq_len, embedding_dim]
             attention_mask: [..., seq_len] silently ignored!
                 It exists for compatibility with other pooling methods.
+
         Returns:
-            pooled_embedding: [..., embedding_dim]
+            torch.Tensor: pooled_embedding [..., embedding_dim]
         """
         return last_hidden_states[..., 0, :]
+
+    @staticmethod
+    def avg_pool(last_hidden_states, attention_mask=None):
+        """Average pool the sentence embedding.
+
+        Args:
+            last_hidden_states (torch.Tensor): [..., seq_len, embedding_dim]
+            attention_mask (torch.Tensor): [..., seq_len]
+
+        Returns:
+            torch.Tensor: pooled_embedding [..., embedding_dim]
+        """
+        # Compute the average embedding, ignoring the padding tokens.
+        if attention_mask is not None:
+            last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
+        return last_hidden.sum(dim=-2) / attention_mask.sum(dim=-1)[..., None]
 
     def compute_embedding_similarity(self, query, target):
         """Compute the similarity between query and target(s) embeddings.
         
         Args:
-            query: [batch_size, 1, embedding_dim]
-            target: [batch_size, k, embedding_dim]
+            query (torch.Tensor): [batch_size, 1, embedding_dim]
+            target (torch.Tensor): [batch_size, k, embedding_dim]
         
         Returns:
-            similarity: [batch_size, k]
+            torch.Tensor: similarity [batch_size, k]
         """
         return F.cosine_similarity(query, target, dim=-1) / self.temperature
 
@@ -53,16 +73,19 @@ class LitSentenceEncoder(pl.LightningModule):
         is computed between the pooled query and target(s) embeddings. 
         
         Args:
-            query: [..., 1, seq_len, embedding_dim]
+            query (torch.Tensor): [..., 1, seq_len, embedding_dim]
                 query sentence embedding
-            target: [..., k, seq_len, embedding_dim]
+            target (torch.Tensor): [..., k, seq_len, embedding_dim]
                 target sentence(s) embedding
 
         Returns:
-            similarity: [..., k]
-        """        
+            torch.Tensor: similarity [..., k]
+        """
         embeddings = torch.cat([query, target], dim=-3)  # [..., 1 + k, seq_len, embedding_dim]
-        embeddings = self.cls_pool(embeddings) # [..., 1 + k, embedding_dim]
+        if self.pool_method == 'cls':
+            embeddings = self.cls_pool(embeddings) # [..., 1 + k, embedding_dim]
+        else:
+            embeddings = self.avg_pool(embeddings)
         query_embeddings = embeddings[..., 0:1, :]  # [..., 1, embedding_dim]
         samples_embeddings = embeddings[..., 1:, :]  # [..., k, embedding_dim]
         similarity = self.compute_embedding_similarity(query_embeddings, samples_embeddings)
