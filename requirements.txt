@@ -1,7 +1,9 @@
 beautifulsoup4
+datasets
 lightning
 pyvis
 SPARQLWrapper
 srsly
 transformers
 tqdm
+wikimapper
