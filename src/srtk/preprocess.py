@@ -27,7 +27,7 @@ from .preprocessing.score_path import main as score_path
 from .preprocessing.negative_sampling import main as negative_sampling
 
 
-def main(args):
+def preprocess(args):
     output_path = args.output
     # Create parent dir for output if not exists.
     Path(os.path.dirname(output_path)).mkdir(parents=True, exist_ok=True)
@@ -97,4 +97,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     _add_arguments(parser)
     args = parser.parse_args()
-    main(args)
+    preprocess(args)

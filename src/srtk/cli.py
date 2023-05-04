@@ -1,25 +1,27 @@
 """Command-line interface for SRTK."""
 import argparse
 
-from .link_wikidata import _add_arguments as add_link_wikidata_arguments
-from .link_wikidata import main as link_wikidata
+from .link import _add_arguments as add_link_wikidata_arguments
+from .link import link
 from .preprocess import _add_arguments as add_preprocess_arguments
-from .preprocess import main as preprocess
+from .preprocess import preprocess
 from .retrieve import _add_arguments as add_retrieve_arguments
-from .retrieve import main as retrieve
+from .retrieve import retrieve
 from .train import _add_arguments as add_train_arguments
-from .train import main as train
+from .train import train
 from .visualize import _add_arguments as add_visualize_arguments
-from .visualize import main as visualize
+from .visualize import visualize
 
 
 def main():
+    """Main entry to the command line interface.
+    """
     parser = argparse.ArgumentParser(description='SRTK: A toolkit for smantic-relevant subgraph retrieval')
     subparsers = parser.add_subparsers(help='sub-command help')
 
-    parser_link_wikidata = subparsers.add_parser('link-wikidata', help='link entities to Wikidata')
+    parser_link_wikidata = subparsers.add_parser('link', help='link entities to a knowledge graph')
     add_link_wikidata_arguments(parser_link_wikidata)
-    parser_link_wikidata.set_defaults(func=link_wikidata)
+    parser_link_wikidata.set_defaults(func=link)
 
     parser_preprocess = subparsers.add_parser('preprocess', help='preprocess the data')
     add_preprocess_arguments(parser_preprocess)

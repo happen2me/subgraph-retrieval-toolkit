@@ -244,7 +244,7 @@ def print_and_save_recall(retrieved_path):
     srsly.write_json(recall_path, info)
 
 
-def main(args):
+def retrieve(args):
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
     if args.knowledge_graph == 'freebase':
         kg = Freebase(args.sparql_endpoint)
@@ -309,4 +309,4 @@ if __name__ == '__main__':
         else:
             args.sparql_endpoint = 'http://localhost:1234/api/endpoint/sparql'
         print(f'Using default sparql endpoint for {args.knowledge_graph}: {args.sparql_endpoint}')
-    main(args)
+    retrieve(args)

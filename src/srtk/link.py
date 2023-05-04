@@ -28,7 +28,7 @@ def socket_reachable(host, port):
         return False
 
 
-def main(args):
+def link(args):
     try:
         host = args.el_endpoint.split(':')[-2].split('/')[-1]
         port = int(args.el_endpoint.split(':')[-1])
@@ -92,6 +92,8 @@ def _add_arguments(parser):
     parser.add_argument('-i', '--input', type=str, help='Input file path, in which the question is stored')
     parser.add_argument('-o', '--output', type=str, help='Output file path, in which the entity linking result is stored')
     parser.add_argument('-e', '--el-endpoint', type=str, default='http://127.0.0.1:1235', help='REL endpoint')
+    parser.add_argument('-kg', '--knowledge-graph', type=str, default='wikidata', choices=['wikidata'],
+                        help='Knowledge graph to link to, only wikidata is supported now')
     parser.add_argument('--wikimapper-db', type=str, default='resources/wikimapper/index_enwiki.db', help='Wikimapper database path')
     parser.add_argument('--ground-on', type=str, default='question', help='The key to ground on, the corresponding text will be sent to the REL endpoint for entity linking')
     
@@ -100,4 +102,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     _add_arguments(parser)
     args = parser.parse_args()
-    main(args)
+    link(args)
