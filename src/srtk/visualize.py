@@ -69,7 +69,7 @@ def add_text_to_html(html, text):
     return soup.prettify()
     
 
-def main(args):
+def visualize(args):
     if args.knowledge_graph == 'wikidata':
         knowledge_graph = Wikidata(args.sparql_endpoint)
     else:
@@ -111,4 +111,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     add_arguments(parser)
     args = parser.parse_args()
-    main(args)
+    visualize(args)

@@ -69,7 +69,7 @@ def prepare_dataloaders(train_data, validation_data, tokenizer, batch_size):
     return train_loader, validation_loader
 
 
-def main(args):
+def train(args):
     torch.set_float32_matmul_precision('medium')
     model = LitSentenceEncoder(args.model_name_or_path, lr=args.learning_rate)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
@@ -110,4 +110,4 @@ if __name__ == '__main__':
     add_arguments(parser)
     args = parser.parse_args()
 
-    main(args)
+    train(args)
