@@ -11,6 +11,7 @@ SRTK CLI Interface supports the following subcommands:
 
 - `preprocess`: Preprocess a dataset for training a subgraph retrieval model.
 - `train`: Train a subgraph retrieval model on a preprocessed dataset.
+- `link`: Link entity mentions in a text to a knowledge graph. Currently only Wikidata is supported out of the box.
 - `retrieve`: Retrieve a semantic-relevant subgraph from a knowledge graph with a trained retriever. It can also be used to evaluate a trained retriever.
 - `visualize`: Visualize a retrieved subgraph using a graph visualization tool.
 

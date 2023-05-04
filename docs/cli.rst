@@ -1,6 +1,8 @@
 Command Line Interface
 =================================
 
+SRTK command line interfaces provides an easy but powerful way to retrieve subgraphs
+as well as to streamline the lifecycle of subgraph retrieval.
 
 srtk preprocess
 -------------------
@@ -86,18 +88,19 @@ Options:
   --fast-dev-run        fast dev run for debugging, only use 1 batch for training and validation
 
 
-srtk link-wikidata
+srtk link
 -------------------
 
-Entity linking on Wikidata. The input is a jsonl file. The field of interest is specified by the argument --ground-on. The output is a jsonl file,
-each line is a dict with keys: id, question_entities, spans, entity_names.
+Entity linking. The input is a jsonl file. The field of interest is specified by the argument --ground-on. The output is a jsonl file, each line is a dict with keys: id,
+question_entities, spans, entity_names. Currently, only Wikidata is supported out of the box.
 
 Usage:
 
 .. code-block:: bash
 
-  srtk link-wikidata [-h] [-i INPUT] [-o OUTPUT] [-e EL_ENDPOINT] [--wikimapper-db WIKIMAPPER_DB]
-                     [--ground-on GROUND_ON]
+  srtk link [-h] [-i INPUT] [-o OUTPUT] [-e EL_ENDPOINT] [-kg {wikidata}]
+            [--wikimapper-db WIKIMAPPER_DB] [--ground-on GROUND_ON]
+
 
 Options:
 
@@ -108,11 +111,12 @@ Options:
                         Output file path, in which the entity linking result is stored
   -e EL_ENDPOINT, --el-endpoint EL_ENDPOINT
                         REL endpoint
+  -kg {wikidata}, --knowledge-graph {wikidata}
+                        Knowledge graph to link to, only wikidata is supported now
   --wikimapper-db WIKIMAPPER_DB
                         Wikimapper database path
   --ground-on GROUND_ON
                         The key to ground on, the corresponding text will be sent to the REL endpoint for entity linking
-
 
 srtk retrieve
 -----------------
