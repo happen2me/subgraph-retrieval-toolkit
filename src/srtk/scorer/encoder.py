@@ -15,6 +15,9 @@ class LitSentenceEncoder(pl.LightningModule):
             raise ValueError(f"pool method must be either cls or avg, got {pool}")
         super().__init__()
         self.model = AutoModel.from_pretrained(model_name_or_path)
+        if self.model.config.is_encoder_decoder:
+            self.model = self.model.encoder
+            print("The model is an encoder-decoder model, only the encoder will be used.")
         self.config = self.model.config
         self.temperature = temperature
         self.lr = lr
@@ -28,7 +31,7 @@ class LitSentenceEncoder(pl.LightningModule):
     def cls_pool(last_hidden_states, attention_mask=None):
         """CLS pool the sentence embedding.
         This is the pooling method adopted by RUC's SR paper.
-        
+
         Args:
             last_hidden_states: [..., seq_len, embedding_dim]
             attention_mask: [..., seq_len] silently ignored!
@@ -51,27 +54,28 @@ class LitSentenceEncoder(pl.LightningModule):
             torch.Tensor: pooled_embedding [..., embedding_dim]
         """
         # Compute the average embedding, ignoring the padding tokens.
-        if attention_mask is not None:
-            last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
+        if attention_mask is None:
+            attention_mask = torch.ones(last_hidden_states.shape[:-1], device=last_hidden_states.device)
+        last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
         return last_hidden.sum(dim=-2) / attention_mask.sum(dim=-1)[..., None]
 
     def compute_embedding_similarity(self, query, target):
         """Compute the similarity between query and target(s) embeddings.
-        
+
         Args:
             query (torch.Tensor): [batch_size, 1, embedding_dim]
             target (torch.Tensor): [batch_size, k, embedding_dim]
-        
+
         Returns:
             torch.Tensor: similarity [batch_size, k]
         """
         return F.cosine_similarity(query, target, dim=-1) / self.temperature
 
-    def compute_sentence_similarity(self, query, target):
+    def compute_sentence_similarity(self, query, target, query_mask=None, target_mask=None):
         """Compute the similarity between query and target(s) sentence embeddings.
         The query & target(s) sentence embedding are first pooled. Then the similarity
         is computed between the pooled query and target(s) embeddings. 
-        
+
         Args:
             query (torch.Tensor): [..., 1, seq_len, embedding_dim]
                 query sentence embedding
@@ -85,7 +89,12 @@ class LitSentenceEncoder(pl.LightningModule):
         if self.pool_method == 'cls':
             embeddings = self.cls_pool(embeddings) # [..., 1 + k, embedding_dim]
         else:
-            embeddings = self.avg_pool(embeddings)
+            if query_mask is None:
+                query_mask = torch.ones(query.shape[:-1], device=query.device)
+            if target_mask is None:
+                target_mask = torch.ones(target.shape[:-1], device=target.device)
+            attention_mask = torch.cat([query_mask, target_mask], dim=-2)  # [..., 2 + k, seq_len]
+            embeddings = self.avg_pool(embeddings, attention_mask)
         query_embeddings = embeddings[..., 0:1, :]  # [..., 1, embedding_dim]
         samples_embeddings = embeddings[..., 1:, :]  # [..., k, embedding_dim]
         similarity = self.compute_embedding_similarity(query_embeddings, samples_embeddings)
@@ -106,7 +115,8 @@ class LitSentenceEncoder(pl.LightningModule):
         query_embedding = embeddings[:, 0:1]  # [batch_size, 1, seq_len, embedding_dim]
         samples_embedding = embeddings[:, 1:]  # [batch_size, 1 + neg, seq_len, embedding_dim]
         # similarity: [batch_size, 1 + neg]
-        query_samples_similarity = self.compute_sentence_similarity(query_embedding, samples_embedding)
+        query_samples_similarity = self.compute_sentence_similarity(query_embedding, samples_embedding,
+            query_mask=batch['attention_mask'][:, 0:1], target_mask=batch['attention_mask'][:, 1:])
         # The zerot-th label, where positive sample locates, is set to 0.
         labels = torch.zeros(query_samples_similarity.shape[0], dtype=torch.long,
                              device=query_samples_similarity.device)
