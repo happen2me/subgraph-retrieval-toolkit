@@ -5,8 +5,9 @@ Know more about DBpedia Spotlight at https://www.dbpedia-spotlight.org/.
 """
 import requests
 
+from .linker_base import LinkerBase
 
-class DBpediaLinker:
+class DBpediaLinker(LinkerBase):
     """Link entitiy mentions to DBpedia entities with the DBpedia Spotlight endpoint"""
     def __init__(self, endpoint):
         """Initialize the linker

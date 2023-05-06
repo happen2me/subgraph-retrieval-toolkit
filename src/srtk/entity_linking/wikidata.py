@@ -2,8 +2,10 @@ import requests
 
 from wikimapper import WikiMapper
 
+from .linker_base import LinkerBase
 
-class WikidataLinker:
+
+class WikidataLinker(LinkerBase):
     """Link entitiy mentions to Wikidata entities using the REL endpoint"""
     def __init__(self, endpoint, wikimapper_db):
         """Initialize the linker
