@@ -94,7 +94,7 @@ def add_arguments(parser):
                         help='output model path. the model will be saved in the format of huggingface models,\
                         which can be uploaded to the huggingface hub and shared with the community.\
                         (default: artifacts/scorer)')
-    parser.add_argument('--model-name-or-path', default='intfloat/e5-small',
+    parser.add_argument('-m', '--model-name-or-path', default='intfloat/e5-small',
                         help='pretrained model name or path. It is fully compatible with HuggingFace models.\
                         You can specify either a local path where a model is saved, or an encoder model identifier\
                         from huggingface hub. (default: intfloat/e5-small)')
