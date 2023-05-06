@@ -3,45 +3,28 @@ This step links the entity mentions in the question to the entities in the Wikid
 It inference on the REL endpoint.
 """
 import argparse
-
-import socket
 from pathlib import Path
 
 import srsly
 from tqdm import tqdm
 
-from .entity_linking.wikidata import WikidataLinker
-
-
-def socket_reachable(host, port):
-    """Check if a socket is reachable
-    """
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(2) # set a timeout value for the socket
-        s.connect((host, port))
-        s.close()
-        return True
-    except Exception as err:
-        print(err)
-        return False
+from .entity_linking import WikidataLinker, DBpediaLinker
+from .utils import socket_reachable
 
 
 def link(args):
-    try:
-        host = args.el_endpoint.split(':')[-2].split('/')[-1]
-        port = int(args.el_endpoint.split(':')[-1])
-    except Exception as exc:
-        raise ValueError(f"Can't parse the endpoint {args.el_endpoint}") from exc
-    if not socket_reachable(host, port):
+    """Link the entities in the questions to the Wikidata knowledge graph"""
+    if not socket_reachable(args.el_endpoint):
         raise RuntimeError(f"Can't reach the endpoint {args.el_endpoint}")
 
     if args.knowledge_graph == 'wikidata':
         linker = WikidataLinker(args.el_endpoint, args.wikimapper_db)
+    elif args.knowledge_graph == 'dbpedia':
+        linker = DBpediaLinker(args.el_endpoint)
     else:
         raise NotImplementedError(f"Knowledge graph {args.knowledge_graph} not implemented")
 
-    with open(args.input, "r", encoding="utf-8") as f:
+    with open(args.input, 'r', encoding='utf-8') as f:
         total_lines = len(f.readlines())
     questions = srsly.read_jsonl(args.input)
     cnt_id_not_found = 0
@@ -52,8 +35,8 @@ def link(args):
         cnt_id_found += len(linked["question_entities"])
         if 'not_converted_entities' in linked:
             cnt_id_not_found += len(linked['not_converted_entities'])
-        if "id" in question:
-            linked["id"] = question["id"]
+        if 'id' in question:
+            linked['id'] = question['id']
         all_linked.append(linked)
     if cnt_id_not_found > 0:
         print(f"{cnt_id_not_found} / {cnt_id_found + cnt_id_not_found} grounded entities not converted to ids")
@@ -75,8 +58,9 @@ def add_arguments(parser):
     '''
     parser.add_argument('-i', '--input', type=str, help='Input file path, in which the question is stored')
     parser.add_argument('-o', '--output', type=str, help='Output file path, in which the entity linking result is stored')
-    parser.add_argument('-e', '--el-endpoint', type=str, default='http://127.0.0.1:1235', help='REL endpoint')
-    parser.add_argument('-kg', '--knowledge-graph', type=str, default='wikidata', choices=['wikidata'],
+    parser.add_argument('-e', '--el-endpoint', type=str, default='http://127.0.0.1:1235', help='Entity linking endpoint \
+                        (default: http://127.0.0.1:1235 <local REL endpoint>)')
+    parser.add_argument('-kg', '--knowledge-graph', type=str, default='wikidata', choices=['wikidata', 'dbpedia'],
                         help='Knowledge graph to link to, only wikidata is supported now')
     parser.add_argument('--wikimapper-db', type=str, default='resources/wikimapper/index_enwiki.db', help='Wikimapper database path')
     parser.add_argument('--ground-on', type=str, default='question', help='The key to ground on, the corresponding text will be sent to the REL endpoint for entity linking')
