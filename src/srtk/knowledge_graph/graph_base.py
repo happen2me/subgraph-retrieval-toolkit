@@ -49,7 +49,7 @@ class KnowledgeGraphBase:
 
     @abstractmethod
     def get_neighbor_relations(self, src: str, hop: int, limit: int) -> List[str]:
-        """Get relations between src and dst.
+        """Get n-hop neighbor relations of src.
 
         Args:
             src (str): source entity
