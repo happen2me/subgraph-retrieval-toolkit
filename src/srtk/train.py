@@ -48,7 +48,10 @@ class Collator:
 
 
 def prepare_dataloaders(train_data, validation_data, tokenizer, batch_size):
-    """Prepare dataloaders for training and validation."""
+    """Prepare dataloaders for training and validation.
+
+    If validation dataset is not provided, 5 percent of the training data will be used as validation data.
+    """
     def tokenize(example):
         tokenized = tokenizer(example['input_text'], padding='max_length', truncation=True, return_tensors='pt', max_length=32)
         return tokenized
@@ -70,12 +73,16 @@ def prepare_dataloaders(train_data, validation_data, tokenizer, batch_size):
 
 
 def train(args):
+    """Train the scorer model.
+
+    The model compares the similarity between [question; previous relation] and the next relation.
+    """
     torch.set_float32_matmul_precision('medium')
     model = LitSentenceEncoder(args.model_name_or_path, lr=args.learning_rate)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     train_loader, validation_loader = prepare_dataloaders(args.train_dataset, args.validation_dataset, tokenizer, args.batch_size)
     day_hour = datetime.datetime.now().strftime('%m%d%H%M')
-    wandb_logger = WandbLogger(project='retrieval', name=day_hour , group='contrastive', save_dir='artifacts')
+    wandb_logger = WandbLogger(project=args.wandb_project, name=day_hour , group=args.wandb_group, save_dir=args.wandb_savedir)
     trainer = pl.Trainer(accelerator=args.accelerator, default_root_dir=args.output_dir,
                          fast_dev_run=args.fast_dev_run, max_epochs=args.max_epochs, logger=wandb_logger)
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=validation_loader)
@@ -104,6 +111,10 @@ def add_arguments(parser):
     parser.add_argument('--accelerator', default='gpu', help='accelerator, can be cpu, gpu, or tpu (default: gpu)')
     parser.add_argument('--fast-dev-run', action='store_true',
                         help='fast dev run for debugging, only use 1 batch for training and validation')
+    parser.add_argument('--wandb-project', default='retrieval', help='wandb project name (default: retrieval)')
+    parser.add_argument('--wandb-group', default='contrastive', help='wandb group name (default: contrastive)')
+    parser.add_argument('--wandb-savedir', default='artifacts', help='wandb save directory (default: artifacts)')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

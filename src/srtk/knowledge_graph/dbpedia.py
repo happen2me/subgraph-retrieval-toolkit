@@ -96,6 +96,7 @@ class DBpedia(KnowledgeGraphBase):
                 SELECT DISTINCT ?dst WHERE {{
                     dbr:{src} dbo:{path[0]} ?dst.
                 }}
+                LIMIT {limit}
             """
         else:
             query = f"""
@@ -103,6 +104,7 @@ class DBpedia(KnowledgeGraphBase):
                     dbr:{src} dbo:{path[0]} ?mid.
                     ?mid dbo:{path[1]} ?dst.
                     }}
+                    LIMIT {limit}
                 """
         leaves = self.queryDBPedia(query)
         leaves = [self.get_id_from_uri(leaf['dst']['value']) for leaf in leaves]
@@ -179,5 +181,3 @@ class DBpedia(KnowledgeGraphBase):
             return None
         label = labels[0]['name']['value']
         return label
-
-    
