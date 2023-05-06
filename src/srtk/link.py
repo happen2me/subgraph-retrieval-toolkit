@@ -3,19 +3,18 @@ This step links the entity mentions in the question to the entities in the Wikid
 It inference on the REL endpoint.
 """
 import argparse
-import requests
+
 import socket
 from pathlib import Path
 
 import srsly
 from tqdm import tqdm
 
-from wikimapper import WikiMapper
+from .entity_linking.wikidata import WikidataLinker
 
 
 def socket_reachable(host, port):
-    """
-    Check if a socket is reachable
+    """Check if a socket is reachable
     """
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -36,43 +35,28 @@ def link(args):
         raise ValueError(f"Can't parse the endpoint {args.el_endpoint}") from exc
     if not socket_reachable(host, port):
         raise RuntimeError(f"Can't reach the endpoint {args.el_endpoint}")
-    mapper = WikiMapper(args.wikimapper_db)
+
+    if args.knowledge_graph == 'wikidata':
+        linker = WikidataLinker(args.el_endpoint, args.wikimapper_db)
+    else:
+        raise NotImplementedError(f"Knowledge graph {args.knowledge_graph} not implemented")
 
     with open(args.input, "r", encoding="utf-8") as f:
         total_lines = len(f.readlines())
     questions = srsly.read_jsonl(args.input)
-    cnt_qid_not_found = 0
-    cnt_total_ground = 0
+    cnt_id_not_found = 0
+    cnt_id_found = 0
     all_linked = []
     for question in tqdm(questions, total=total_lines, desc=f"Entity linking {args.input}"):
-        document = {
-            'text': question[args.ground_on],
-        }
-        api_results = requests.post(args.el_endpoint, json=document, timeout=60).json()
-        cnt_total_ground += len(api_results)
-        qids = []
-        spans = []
-        entities = []
-        for result in api_results:
-            start_pos, mention_length, mention, entity, disambiguation_cofidence, mention_detection_confidence, tag = result
-            qid = mapper.title_to_id(entity)
-            span = (start_pos, start_pos + mention_length)
-            if qid is None:
-                cnt_qid_not_found += 1
-            else:
-                qids.append(qid)
-                entities.append(entity)
-                spans.append(span)
-        linked = {
-            "question": question[args.ground_on],
-            "question_entities": qids,
-            "spans": spans,
-            "entity_names": entities
-        }
+        linked = linker.annotate(question[args.ground_on])
+        cnt_id_found += len(linked["question_entities"])
+        if 'not_converted_entities' in linked:
+            cnt_id_not_found += len(linked['not_converted_entities'])
         if "id" in question:
             linked["id"] = question["id"]
         all_linked.append(linked)
-    print(f"{cnt_qid_not_found} / {cnt_total_ground} grounded entities not converted to Wikidata qids")
+    if cnt_id_not_found > 0:
+        print(f"{cnt_id_not_found} / {cnt_id_found + cnt_id_not_found} grounded entities not converted to ids")
     # check whether the folder exists
     folder_path = Path(args.output).parent
     if not folder_path.exists():
@@ -96,7 +80,7 @@ def add_arguments(parser):
                         help='Knowledge graph to link to, only wikidata is supported now')
     parser.add_argument('--wikimapper-db', type=str, default='resources/wikimapper/index_enwiki.db', help='Wikimapper database path')
     parser.add_argument('--ground-on', type=str, default='question', help='The key to ground on, the corresponding text will be sent to the REL endpoint for entity linking')
-    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
