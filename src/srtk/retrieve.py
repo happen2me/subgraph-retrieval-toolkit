@@ -20,8 +20,9 @@ import srsly
 import torch
 from tqdm import tqdm
 
-from .knowledge_graph import Freebase, Wikidata, KnowledgeGraphBase
+from .knowledge_graph import KnowledgeGraphBase
 from .scorer import Scorer
+from .utils import get_knowledge_graph
 
 
 END_REL = 'END OF HOP'
@@ -264,7 +265,7 @@ def print_and_save_recall(retrieved_path):
     counts as a hit.
     """
     hit, miss = calculate_hit_and_miss(retrieved_path)
-    print(f"Answer recall: {hit / (hit + miss)} ({hit} / {hit + miss})")
+    print(f"Answer coverage rate: {hit / (hit + miss)} ({hit} / {hit + miss})")
     info = {}
     if hit + miss != 0:
         info = {
@@ -278,11 +279,14 @@ def print_and_save_recall(retrieved_path):
 
 
 def retrieve(args):
+    """Retrieve subgraphs from a knowledge graph.
+
+    Args:
+        args (Namespace): arguments for subgraph retrieval
+    """
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
-    if args.knowledge_graph == 'freebase':
-        kg = Freebase(args.sparql_endpoint)
-    else:
-        kg = Wikidata(args.sparql_endpoint, exclude_qualifiers=not args.include_qualifiers)
+    kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint,
+                             exclude_qualifiers=not args.include_qualifiers)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     scorer = Scorer(args.scorer_model_path, device)
     retriever = Retriever(kg, scorer, args.beam_width, args.max_depth)
@@ -313,7 +317,7 @@ def _add_arguments(parser):
                         ``question`` and ``question_entities`` fields.')
     parser.add_argument('-o', '--output', type=str, required=True, help='output file path for storing retrieved triplets.')
     parser.add_argument('-e', '--sparql-endpoint', type=str, help='SPARQL endpoint for Wikidata or Freebase services.')
-    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('freebase', 'wikidata'),
+    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('freebase', 'wikidata', 'dbpedia'),
                         help='choose the knowledge graph: currently supports ``freebase`` and ``wikidata``.')
     parser.add_argument('-m', '--scorer-model-path', type=str, required=True, help='Path to the scorer model, containing \
                         both the saved model and its tokenizer in the Huggingface models format.\
@@ -339,7 +343,9 @@ if __name__ == '__main__':
     if not args.sparql_endpoint:
         if args.knowledge_graph == 'freebase':
             args.sparql_endpoint = 'http://localhost:3001/sparql'
-        else:
+        elif args.knowledge_graph == 'wikidata':
             args.sparql_endpoint = 'http://localhost:1234/api/endpoint/sparql'
+        else:
+            args.sparql_endpoint = 'https://dbpedia.org/sparql'
         print(f'Using default sparql endpoint for {args.knowledge_graph}: {args.sparql_endpoint}')
     retrieve(args)

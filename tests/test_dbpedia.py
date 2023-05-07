@@ -48,3 +48,9 @@ def test_get_neighbor_relations(dbpedia):
     # Test 2-hop relations
     relations = dbpedia.get_neighbor_relations(src, hop=2)
     assert ("parent", "title") in relations, "Charles III --parent--> Elizabeth II --title--> Queen"
+
+def test_deduce_leaves_from_multiple_srcs(dbpedia):
+    srcs = ["Charles_III", "Elizabeth_II"]
+    path = ("successor",)
+    leaves = dbpedia.deduce_leaves_from_multiple_srcs(srcs, path, limit=10)
+    assert "Charles_III" in leaves and "William,_Prince_of_Wales" in leaves

@@ -95,19 +95,54 @@ class DBpedia(KnowledgeGraphBase):
             query = f"""
                 SELECT DISTINCT ?dst WHERE {{
                     dbr:{src} dbo:{path[0]} ?dst.
+                    FILTER(STRSTARTS(str(?dst), "http://dbpedia.org/resource/"))
                 }}
                 LIMIT {limit}
-            """
+                """
         else:
             query = f"""
                 SELECT DISTINCT ?dst WHERE {{
                     dbr:{src} dbo:{path[0]} ?mid.
                     ?mid dbo:{path[1]} ?dst.
-                    }}
-                    LIMIT {limit}
+                    FILTER(STRSTARTS(str(?dst), "http://dbpedia.org/resource/"))
+                }}
+                LIMIT {limit}
                 """
         leaves = self.queryDBPedia(query)
         leaves = [self.get_id_from_uri(leaf['dst']['value']) for leaf in leaves]
+        return leaves
+
+    def deduce_leaves_from_multiple_srcs(self, srcs, path, limit=2000):
+        """Deuce leave entities from multiple source entities following the path.
+
+        Args:
+            srcs (list[str]): list of source entities
+            path (list[str]): path from source entity to destination entity
+            limit (int, optional): limit of the number of leaves. Defaults to 200.
+
+        Returns:
+            list[str]: list of leaves. Each leaf is a QID.
+        """
+        if len(path) >= 2:
+            raise NotImplementedError(f'Currenly only support paths with length less than 2, got {len(path)}')
+        if len(path) == 0:
+            return srcs
+        if len(srcs) == 0:
+            return []
+
+        query = f"""
+            SELECT DISTINCT ?x WHERE {{
+                VALUES ?src {{dbr:{' dbr:'.join(srcs)}}}
+                ?src dbo:{path[0]} ?x.
+                FILTER(STRSTARTS(str(?x), "http://dbpedia.org/resource/"))
+            }}
+            LIMIT {limit}
+            """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+        leaves = self.queryDBPedia(query)
+        # Keep only QIDs in the leaves
+        leaves = [leaf['x']['value'].split('/')[-1] for leaf in leaves]
         return leaves
 
     @lru_cache

@@ -21,7 +21,8 @@ import srsly
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
-from knowledge_graph import Wikidata, Freebase, KnowledgeGraphBase
+from knowledge_graph import KnowledgeGraphBase
+from utils import get_knowledge_graph
 
 END_REL = "END OF HOP"
 
@@ -53,7 +54,7 @@ def sample_negative_relations(soruce_entities, prev_path, positive_connections,
     return negative_relations
 
 
-def is_candidate_space_too_large(path, question_entities, kg, candidate_depth_multiplier=5):
+def is_candidate_space_too_large(path, question_entities, kg: KnowledgeGraphBase, candidate_depth_multiplier=5):
     """Check whether the number of the candidate entities along the path is too large.
     
     Args:
@@ -82,7 +83,7 @@ def is_candidate_space_too_large(path, question_entities, kg, candidate_depth_mu
 
 
 def sample_records_from_path(path, question, question_entities, positive_connections,
-                             kg, num_negative):
+                             kg: KnowledgeGraphBase, num_negative):
     """Sample training records from a path.
     
     Returns:
@@ -179,10 +180,7 @@ def create_jsonl_dataset(records):
 
 
 def main(args):
-    if args.knowledge_graph == 'freebase':
-        kg = Freebase(args.sparql_endpoint)
-    else:
-        kg = Wikidata(args.sparql_endpoint)
+    kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint)
     positive_threshold = args.positive_threshold
     # Each sample has the following fields:
     # - id: sample id
@@ -223,8 +221,10 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sparql-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='wikidata endpoint')
-    parser.add_argument('-kg', '--knowledge-graph', default='wikidata', help='knowledge graph name')
+    parser.add_argument('-e', '--sparql-endpoint', default='http://localhost:1234/api/endpoint/sparql',
+                        help='knowledge graph endpoint (default: http://localhost:1234/api/endpoint/sparql)')
+    parser.add_argument('-kg', '--knowledge-graph', default='wikidata', choices=['wikidata', 'freebase', 'dbpedia'],
+                        help='knowledge graph name')
     parser.add_argument('--scored-path-file', help='The file containing scored paths')
     parser.add_argument('--output-path', help='The path to the output file')
     parser.add_argument('--positive-threshold', type=float, default=0.5, help='The threshold to determine whether a path is positive or negative')

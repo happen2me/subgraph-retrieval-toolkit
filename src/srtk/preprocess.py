@@ -80,7 +80,7 @@ def _add_arguments(parser):
     parser.add_argument('-e', '--sparql-endpoint', type=str, required=True,
                         help="SPARQL endpoint URL for either Wikidata or Freebase\
                         (e.g., 'http://localhost:1234/api/endpoint/sparql' for default local qEndpoint)")
-    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('wikidata', 'freebase'),
+    parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('wikidata', 'freebase', 'dbpedia'),
                         help='knowledge graph name, either wikidata or freebase')
     parser.add_argument('--search-path', action='store_true',
                         help='Whether to search paths between question and answer entities. If not specified, paths and scores fields\

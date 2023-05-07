@@ -13,7 +13,8 @@ import srsly
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
-from knowledge_graph import Wikidata, Freebase, KnowledgeGraphBase
+from knowledge_graph import KnowledgeGraphBase
+from utils import get_knowledge_graph
 
 
 def generate_paths(src_entities, dst_entities, kg: KnowledgeGraphBase, max_path=50):
@@ -51,10 +52,7 @@ def main(args):
     # - answer_entities: list of answer entities
     ground_samples = srsly.read_jsonl(args.ground_path)
     total_samples = sum(1 for _ in srsly.read_jsonl(args.ground_path))
-    if args.knowledge_graph == 'freebase':
-        kg = Freebase(args.sparql_endpoint)
-    else:
-        kg = Wikidata(args.sparql_endpoint)
+    kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint)
     processed_samples = []
     skipped = 0
     for sample in tqdm(ground_samples, total=total_samples, desc='Searching paths'):
@@ -71,7 +69,6 @@ def main(args):
             continue
         # Special filter for Freebase
         if args.knowledge_graph == 'freebase':
-            
             paths = list(filter(has_type_relation, paths))
         sample['paths'] = paths
         processed_samples.append(sample)
@@ -83,7 +80,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--sparql-endpoint', default='http://localhost:1234/api/endpoint/sparql', help='knowledge graph SPARQL endpoint')
-    parser.add_argument('--knowledge-graph', type=str, default='wikidata', choices=('wikidata', 'freebase'), help='knowledge graph name (default: wikidata)')
+    parser.add_argument('--knowledge-graph', type=str, default='wikidata', choices=('wikidata', 'freebase', 'dbpedia'), help='knowledge graph name (default: wikidata)')
     parser.add_argument('--ground-path', type=str, required=True, help='grounded file where the question and answer entities are stored')
     parser.add_argument('--output-path', type=str, required=True, help='path file where several paths for each sample stored')
     parser.add_argument('--remove-sample-without-path', action='store_true', help='remove samples without paths')

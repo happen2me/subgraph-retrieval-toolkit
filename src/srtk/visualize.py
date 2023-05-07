@@ -11,7 +11,8 @@ from pyvis.network import Network
 from tqdm import tqdm
 from bs4 import BeautifulSoup as Soup
 
-from .knowledge_graph import KnowledgeGraphBase, Wikidata, Freebase
+from .knowledge_graph import KnowledgeGraphBase
+from .utils import get_knowledge_graph
 
 
 def visualize_subgraph(sample, kg: KnowledgeGraphBase):
@@ -70,10 +71,12 @@ def add_text_to_html(html, text):
     
 
 def visualize(args):
-    if args.knowledge_graph == 'wikidata':
-        knowledge_graph = Wikidata(args.sparql_endpoint)
-    else:
-        knowledge_graph = Freebase(args.sparql_endpoint)
+    """Main entry for subgraph visualization.
+
+    Args:
+        args (Namespace): arguments for subgraph visualization.
+    """
+    knowledge_graph = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint)
     samples = srsly.read_jsonl(args.input)
     total = sum(1 for _ in srsly.read_jsonl(args.input))
     total = min(total, args.max_output)
@@ -101,7 +104,7 @@ def _add_arguments(parser):
     parser.add_argument('-e', '--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
                         help='SPARQL endpoint for Wikidata or Freebase services. In this step, it is used to get the labels of entities.\
                         (Default: http://localhost:1234/api/endpoint/sparql)')
-    parser.add_argument('-kg', '--knowledge-graph', type=str, choices=('wikidata', 'freebase'), default='wikidata',
+    parser.add_argument('-kg', '--knowledge-graph', type=str, choices=('wikidata', 'freebase', 'dbpedia'), default='wikidata',
                         help='The knowledge graph type to use. (Default: wikidata)')
     parser.add_argument('--max-output', type=int, default=1000,
                         help='The maximum number of graphs to output. This is useful for debugging. (Default: 1000)')
