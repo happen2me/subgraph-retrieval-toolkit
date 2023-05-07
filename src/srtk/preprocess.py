@@ -2,21 +2,23 @@
 
 Inputs should be a jsonl file, with each line representing a grounded question.
 The format of each line should be like this example:
-```json
-{
-  "id": "sample-id",
-  "question": "Which universities did Barack Obama graduate from?",
-  "question_entities": [
-    "Q76"
-  ],
-  "answer_entities": [
-    "Q49122",
-    "Q1346110",
-    "Q4569677"
-  ]
-}
-```
+
+.. code-block:: json
+
+    {
+        "id": "sample-id",
+        "question": "Which universities did Barack Obama graduate from?",
+        "question_entities": [
+            "Q76"
+        ],
+        "answer_entities": [
+            "Q49122",
+            "Q1346110",
+            "Q4569677"
+        ]
+    }
 """
+
 import os
 import argparse
 from argparse import Namespace
