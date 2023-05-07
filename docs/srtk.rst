@@ -17,7 +17,7 @@ Submodules
 srtk.link\_wikidata module
 --------------------------
 
-.. automodule:: srtk.link_wikidata
+.. automodule:: srtk.link
    :members:
 
 srtk.preprocess module

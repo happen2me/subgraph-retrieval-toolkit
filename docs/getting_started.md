@@ -4,6 +4,6 @@
 :maxdepth: 2
 
 install
-setup_wikidata
-setup_freebase
+setups/setup_wikidata
+setups/setup_freebase
 ```

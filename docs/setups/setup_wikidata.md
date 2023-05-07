@@ -99,6 +99,20 @@ them to Wikidata IDs.
 
 ## SPARQL Endpoint
 
+
+
+```{seealso}
+If you have no root access, you can also setup the qEenpoint rootlessly.
+
+   ```{toctree}
+   :maxdepth: 1
+
+   setup_qendpoint_rootless.md
+   ```
+
+
+
+
 We use [qEndpoint](https://github.com/the-qa-company/qEndpoint) to
 spin up a Wikidata endpoint that contains a [Wikidata
 Truthy](https://www.wikidata.org/wiki/Wikidata:Database_download#RDF_dumps)
