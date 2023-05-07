@@ -78,7 +78,7 @@ def train(args):
     The model compares the similarity between [question; previous relation] and the next relation.
     """
     torch.set_float32_matmul_precision('medium')
-    model = LitSentenceEncoder(args.model_name_or_path, lr=args.learning_rate)
+    model = LitSentenceEncoder(args.model_name_or_path, lr=args.learning_rate, loss=args.loss)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
     train_loader, validation_loader = prepare_dataloaders(args.train_dataset, args.validation_dataset, tokenizer, args.batch_size)
     day_hour = datetime.datetime.now().strftime('%m%d%H%M')
@@ -107,6 +107,8 @@ def _add_arguments(parser):
                         from huggingface hub. (default: intfloat/e5-small)')
     parser.add_argument('-lr', '--learning-rate', default=5e-5, type=float, help='learning rate (default: 5e-5)')
     parser.add_argument('--batch-size', default=16, type=int, help='batch size (default: 16)')
+    parser.add_argument('--loss', default='cross_entropy', choices=['cross_entropy', 'contrastive'],
+                        help='loss function, can be cross_entropy or contrastive (default: cross_entropy)')
     parser.add_argument('--max-epochs', default=10, type=int, help='max epochs (default: 10)')
     parser.add_argument('--accelerator', default='gpu', help='accelerator, can be cpu, gpu, or tpu (default: gpu)')
     parser.add_argument('--fast-dev-run', action='store_true',
