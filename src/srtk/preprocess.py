@@ -2,21 +2,23 @@
 
 Inputs should be a jsonl file, with each line representing a grounded question.
 The format of each line should be like this example:
-```json
-{
-  "id": "sample-id",
-  "question": "Which universities did Barack Obama graduate from?",
-  "question_entities": [
-    "Q76"
-  ],
-  "answer_entities": [
-    "Q49122",
-    "Q1346110",
-    "Q4569677"
-  ]
-}
-```
+
+.. code-block:: json
+
+    {
+        "id": "sample-id",
+        "question": "Which universities did Barack Obama graduate from?",
+        "question_entities": [
+            "Q76"
+        ],
+        "answer_entities": [
+            "Q49122",
+            "Q1346110",
+            "Q4569677"
+        ]
+    }
 """
+
 import os
 import argparse
 from argparse import Namespace
@@ -66,7 +68,7 @@ def preprocess(args):
     negative_sampling(negative_sampling_args)
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     """Add preprocess arguments to a parser in place."""
     parser.description = 'Create the training data from the grounded questions.'
     parser.add_argument('-i', '--input', type=str, required=True,
@@ -95,6 +97,6 @@ def add_arguments(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    add_arguments(parser)
+    _add_arguments(parser)
     args = parser.parse_args()
     preprocess(args)

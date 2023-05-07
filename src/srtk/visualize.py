@@ -94,7 +94,7 @@ def visualize(args):
     print(f'Visualized graphs outputted to {args.output_dir}.')
 
 
-def add_arguments(parser):
+def _add_arguments(parser):
     parser.description = 'Visualize the graph (represented as a set of triplets) using pyvis.'
     parser.add_argument('-i', '--input', required=True, help='The input subgraph file path.')
     parser.add_argument('-o', '--output-dir', required=True, help='The output directory path.')
@@ -109,6 +109,6 @@ def add_arguments(parser):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    add_arguments(parser)
+    _add_arguments(parser)
     args = parser.parse_args()
     visualize(args)
