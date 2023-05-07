@@ -11,8 +11,7 @@ from pyvis.network import Network
 from tqdm import tqdm
 from bs4 import BeautifulSoup as Soup
 
-from .knowledge_graph import KnowledgeGraphBase
-from .utils import get_knowledge_graph
+from .knowledge_graph import KnowledgeGraphBase, get_knowledge_graph
 
 
 def visualize_subgraph(sample, kg: KnowledgeGraphBase):

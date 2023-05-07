@@ -17,6 +17,7 @@ SRTK CLI Interface supports the following subcommands:
 
 ```{toctree}
 :caption: 'Contents:'
+:maxdepth: 2
 
 getting_started
 cli

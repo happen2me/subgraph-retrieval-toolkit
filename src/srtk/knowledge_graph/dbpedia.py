@@ -74,6 +74,19 @@ class DBpedia(KnowledgeGraphBase):
         paths = [[self.get_id_from_uri(path['r1']['value']), self.get_id_from_uri(path['r2']['value'])] for path in paths]
         return paths
 
+    def escape_entity(self, entity):
+        """Escape brackets in the entity ID.
+
+        Args:
+            entity (str): entity identifier
+
+        Returns:
+            str: the bracket-escaped entity identifier
+        """
+        # entity = entity.replace('(', r'\(').replace(')', r'\)')
+        entity = f"<http://dbpedia.org/resource/{entity}>"
+        return entity
+
     def deduce_leaves(self, src: str, path: List[str], limit: int) -> List[str]:
         """Deduce leave entities from source entity following the path.
 
@@ -90,11 +103,12 @@ class DBpedia(KnowledgeGraphBase):
         
         if len(path) == 0:
             return [src]
-        
+
+        src = self.escape_entity(src)
         if len(path) == 1:
             query = f"""
                 SELECT DISTINCT ?dst WHERE {{
-                    dbr:{src} dbo:{path[0]} ?dst.
+                    {src} dbo:{path[0]} ?dst.
                     FILTER(STRSTARTS(str(?dst), "http://dbpedia.org/resource/"))
                 }}
                 LIMIT {limit}
@@ -102,7 +116,7 @@ class DBpedia(KnowledgeGraphBase):
         else:
             query = f"""
                 SELECT DISTINCT ?dst WHERE {{
-                    dbr:{src} dbo:{path[0]} ?mid.
+                    {src} dbo:{path[0]} ?mid.
                     ?mid dbo:{path[1]} ?dst.
                     FILTER(STRSTARTS(str(?dst), "http://dbpedia.org/resource/"))
                 }}
@@ -130,9 +144,10 @@ class DBpedia(KnowledgeGraphBase):
         if len(srcs) == 0:
             return []
 
+        srcs = [self.escape_entity(src) for src in srcs]
         query = f"""
             SELECT DISTINCT ?x WHERE {{
-                VALUES ?src {{dbr:{' dbr:'.join(srcs)}}}
+                VALUES ?src {{ {' '.join(srcs)} }}
                 ?src dbo:{path[0]} ?x.
                 FILTER(STRSTARTS(str(?x), "http://dbpedia.org/resource/"))
             }}

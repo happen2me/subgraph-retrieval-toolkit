@@ -20,9 +20,8 @@ import srsly
 import torch
 from tqdm import tqdm
 
-from .knowledge_graph import KnowledgeGraphBase
+from .knowledge_graph import KnowledgeGraphBase, get_knowledge_graph
 from .scorer import Scorer
-from .utils import get_knowledge_graph
 
 
 END_REL = 'END OF HOP'

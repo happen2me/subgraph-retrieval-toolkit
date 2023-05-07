@@ -6,3 +6,4 @@ We also provide tutorials in the form of jupyter notebooks.
 - [Train a Retriever on Wikidata with Weak Supervision](https://github.com/happen2me/subgraph-retrieval-toolkit/blob/main/tutorials/3.weak_train_wikidata.ipynb)
 - [Train a Retriever on Freebase with Weak Supervision](https://github.com/happen2me/subgraph-retrieval-toolkit/blob/main/tutorials/4.weak_train_freebase.ipynb)
 - [Supervised Training with Wikidata Simple Questions](https://github.com/happen2me/subgraph-retrieval-toolkit/blob/main/tutorials/5.supervised_train_wikidata.ipynb)
+- [Extend SRTK to other Knowledge Graphs](https://github.com/happen2me/subgraph-retrieval-toolkit/blob/main/tutorials/6.extend_to_new_kg.ipynb)

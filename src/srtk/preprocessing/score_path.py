@@ -21,8 +21,7 @@ import srsly
 from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', )))
-from knowledge_graph import KnowledgeGraphBase
-from utils import get_knowledge_graph
+from knowledge_graph import KnowledgeGraphBase, get_knowledge_graph
 
 
 def score_path(kg: KnowledgeGraphBase, src, path, answers, metric='jaccard'):

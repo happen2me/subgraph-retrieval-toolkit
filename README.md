@@ -7,7 +7,7 @@
 [![DOI](https://zenodo.org/badge/622648166.svg)](https://zenodo.org/badge/latestdoi/622648166)
 
 
-**SRTK** is a toolkit for semantic-relevant subgraph retrieval from large-scale knowledge graphs. It currently supports Wikidata, Freebase and DBPedia.
+**SRTK** is a toolkit for semantic-relevant subgraph retrieval from large-scale knowledge graphs. It currently supports Wikidata, Freebase and DBpedia.
 
 A minimum walkthrough of the retrieve process:
 
@@ -25,8 +25,9 @@ pip install srtk
 
 ### Local Deployment of Knowledge Graphs
 
-- [Setup Wikidata locally](https://srtk.readthedocs.io/en/latest/setup_wikidata.html)
-- [Setup Freebase locally](https://srtk.readthedocs.io/en/latest/setup_freebase.html)
+- [Setup Wikidata locally](https://srtk.readthedocs.io/en/latest/setups/setup_wikidata.html)
+- [Setup Freebase locally](https://srtk.readthedocs.io/en/latest/setups/setup_freebase.html)
+- [Setup DBpedia locally](https://github.com/dbpedia/virtuoso-sparql-endpoint-quickstart)
 
 ## Usage
 
@@ -34,7 +35,7 @@ There are mainly five subcommands of SRTK, which covers the whole pipeline of su
 
 For retrieval:
 
-- `srtk link`: Link entity mentions in texts to a knowledge graph. Currently Wikidata and DBPedia are supported out of the box.
+- `srtk link`: Link entity mentions in texts to a knowledge graph. Currently Wikidata and DBpedia are supported out of the box.
 - `srtk retrieve`: Retrieve semantic-relevant subgraphs from a knowledge graph with a trained retriever. It can also be used to evaluate a trained retriever.
 - `srtk visualize`: Visualize retrieved subgraphs using a graph visualization tool.
 
