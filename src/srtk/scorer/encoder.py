@@ -14,7 +14,7 @@ except ImportError:
 
 
 class LitSentenceEncoder(pl.LightningModule):
-    """Lightning module """
+    """A lightning module that wraps a sentence encoder."""
     def __init__(self, model_name_or_path, temperature=0.07, lr=5e-5, pool='cls', loss='cross_entropy'):
         if pool not in ['cls', 'avg']:
             raise ValueError(f"pool method must be either cls or avg, got {pool}")
@@ -33,6 +33,7 @@ class LitSentenceEncoder(pl.LightningModule):
         self.lr = lr
         self.pool_method = pool
         self.loss = loss
+        self._loss_fns = {}
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -125,6 +126,17 @@ class LitSentenceEncoder(pl.LightningModule):
         similarity = self.compute_embedding_similarity(query_embeddings, samples_embeddings)
         return similarity
 
+    def _get_loss_fn(self):
+        """This allows to change the loss function after initialization.
+        Besides, it maintains a single source of truth for the loss function.
+        """
+        if self.loss not in self._loss_fns:
+            if self.loss == 'contrastive':
+                self._loss_fns[self.loss] = NTXentLoss(temperature=self.temperature)
+            else:
+                self._loss_fns[self.loss] = F.cross_entropy
+        return self._loss_fns[self.loss]
+
     def compute_loss(self, pooled_query_embedding, pooled_sample_embeddings):
         """Compute loss using the pooled query and sample embeddings. It supports
         cross_entropy and contrastive loss.
@@ -137,6 +149,7 @@ class LitSentenceEncoder(pl.LightningModule):
         Returns:
             torch.Tensor: the loss
         """
+        loss_fn = self._get_loss_fn()
         if self.loss == 'contrastive':
             # In each sentence group, the first sentence is the query, the second is the positive,
             # and the rest are negatives. We set the positive to have the same label as the query,
@@ -152,16 +165,15 @@ class LitSentenceEncoder(pl.LightningModule):
                         torch.zeros((n_neg,), dtype=torch.long), torch.arange(2, n_total, dtype=torch.long))
             indices_tuple = tuple(x.to(self.device) for x in indices_tuple)
             loss = 0
-            ntxent_loss = NTXentLoss(self.temperature)
             for sentence_group in concat_embeddings:
-                loss = loss + ntxent_loss(sentence_group, indices_tuple=indices_tuple)
+                loss = loss + loss_fn(sentence_group, indices_tuple=indices_tuple)
         else:
             # similarity: [batch_size, 1 + neg]
             query_samples_similarity = self.compute_embedding_similarity(pooled_query_embedding, pooled_sample_embeddings)
             # The zerot-th label, where positive sample locates, is set to 0.
             labels = torch.zeros(query_samples_similarity.shape[0], dtype=torch.long,
                                 device=query_samples_similarity.device)
-            loss = F.cross_entropy(query_samples_similarity, labels)
+            loss = loss_fn(query_samples_similarity, labels)
         return loss
 
     def batch_forward(self, batch):
