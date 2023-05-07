@@ -7,12 +7,22 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoModel
 
+try:
+    from pytorch_metric_learning.losses import NTXentLoss
+except ImportError:
+    pass
+
 
 class LitSentenceEncoder(pl.LightningModule):
     """Lightning module """
-    def __init__(self, model_name_or_path, temperature=0.07, lr=5e-5, pool='cls'):
+    def __init__(self, model_name_or_path, temperature=0.07, lr=5e-5, pool='cls', loss='cross_entropy'):
         if pool not in ['cls', 'avg']:
             raise ValueError(f"pool method must be either cls or avg, got {pool}")
+        if loss not in ['cross_entropy', 'contrastive']:
+            raise ValueError(f"loss method must be either cross entropy or contrastive, got {loss}")
+        if loss == 'contrastive' and 'NTXentLoss' not in globals():
+            raise ImportError("pytorch_metric_learning is required for contrastive loss.\
+                Please install it via `pip install pytorch-metric-learning`.")
         super().__init__()
         self.model = AutoModel.from_pretrained(model_name_or_path)
         if self.model.config.is_encoder_decoder:
@@ -22,7 +32,7 @@ class LitSentenceEncoder(pl.LightningModule):
         self.temperature = temperature
         self.lr = lr
         self.pool_method = pool
-        self.loss_fn = F.cross_entropy
+        self.loss = loss
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -71,6 +81,32 @@ class LitSentenceEncoder(pl.LightningModule):
         """
         return F.cosine_similarity(query, target, dim=-1) / self.temperature
 
+    def pool_sentence_embedding(self, query, target, query_mask=None, target_mask=None):
+        """Pool the query and target(s) sentence embeddings.
+
+        Args:
+            query (torch.Tensor): [..., 1, seq_len, embedding_dim]
+            target (torch.Tensor): [..., k, seq_len, embedding_dim]
+            query_mask (torch.Tensor, optional): [..., 1, seq_len, embedding_dim]. Defaults to None.
+            target_mask (torch.Tensor, optional): [..., k, seq_len, embedding]. Defaults to None.
+
+        Returns:
+            (torch.Tensor, torch.Tensor): pooled query and sentence embeddings
+        """
+        embeddings = torch.cat([query, target], dim=-3)  # [..., 1 + k, seq_len, embedding_dim]
+        if self.pool_method == 'cls':
+            embeddings = self.cls_pool(embeddings) # [..., 1 + k, embedding_dim]
+        else:
+            if query_mask is None:
+                query_mask = torch.ones(query.shape[:-1], device=query.device)
+            if target_mask is None:
+                target_mask = torch.ones(target.shape[:-1], device=target.device)
+            attention_mask = torch.cat([query_mask, target_mask], dim=-2)  # [..., 2 + k, seq_len]
+            embeddings = self.avg_pool(embeddings, attention_mask)
+        query_embeddings = embeddings[..., 0:1, :]  # [..., 1, embedding_dim]
+        samples_embeddings = embeddings[..., 1:, :]  # [..., k, embedding_dim]
+        return query_embeddings, samples_embeddings
+
     def compute_sentence_similarity(self, query, target, query_mask=None, target_mask=None):
         """Compute the similarity between query and target(s) sentence embeddings.
         The query & target(s) sentence embedding are first pooled. Then the similarity
@@ -85,20 +121,48 @@ class LitSentenceEncoder(pl.LightningModule):
         Returns:
             torch.Tensor: similarity [..., k]
         """
-        embeddings = torch.cat([query, target], dim=-3)  # [..., 1 + k, seq_len, embedding_dim]
-        if self.pool_method == 'cls':
-            embeddings = self.cls_pool(embeddings) # [..., 1 + k, embedding_dim]
-        else:
-            if query_mask is None:
-                query_mask = torch.ones(query.shape[:-1], device=query.device)
-            if target_mask is None:
-                target_mask = torch.ones(target.shape[:-1], device=target.device)
-            attention_mask = torch.cat([query_mask, target_mask], dim=-2)  # [..., 2 + k, seq_len]
-            embeddings = self.avg_pool(embeddings, attention_mask)
-        query_embeddings = embeddings[..., 0:1, :]  # [..., 1, embedding_dim]
-        samples_embeddings = embeddings[..., 1:, :]  # [..., k, embedding_dim]
+        query_embeddings, samples_embeddings = self.pool_sentence_embedding(query, target, query_mask, target_mask)
         similarity = self.compute_embedding_similarity(query_embeddings, samples_embeddings)
         return similarity
+
+    def compute_loss(self, pooled_query_embedding, pooled_sample_embeddings):
+        """Compute loss using the pooled query and sample embeddings. It supports
+        cross_entropy and contrastive loss.
+
+        Args:
+            pooled_query_embedding (torch.Tensor): [batch_size, 1, embedding_dim]
+            pooled_sample_embeddings (torch.Tensor): [batch_size, k, embedding_dim]
+                In our case, k =  n_positive(1) + n_negatives
+
+        Returns:
+            torch.Tensor: the loss
+        """
+        if self.loss == 'contrastive':
+            # In each sentence group, the first sentence is the query, the second is the positive,
+            # and the rest are negatives. We set the positive to have the same label as the query,
+            # and the negatives to have different labels, so that the query and the positive will
+            # be pulled together, and the query and the negatives will be pushed apart.
+            # Ref: https://github.com/KevinMusgrave/pytorch-metric-learning/issues/179
+            concat_embeddings = torch.cat([pooled_query_embedding, pooled_sample_embeddings], dim=-2)
+            n_total = concat_embeddings.shape[-2]
+            n_neg = n_total - 2
+            # I manurally create positive pairs as (0, 1), and negative pairs as (0, 2), (0, 3), ...
+            # indices_tuple (anchor1, postives, anchor2, negatives)
+            indices_tuple = (torch.zeros((1,), dtype=torch.long), torch.ones((1,), dtype=torch.long),
+                        torch.zeros((n_neg,), dtype=torch.long), torch.arange(2, n_total, dtype=torch.long))
+            indices_tuple = tuple(x.to(self.device) for x in indices_tuple)
+            loss = 0
+            ntxent_loss = NTXentLoss(self.temperature)
+            for sentence_group in concat_embeddings:
+                loss = loss + ntxent_loss(sentence_group, indices_tuple=indices_tuple)
+        else:
+            # similarity: [batch_size, 1 + neg]
+            query_samples_similarity = self.compute_embedding_similarity(pooled_query_embedding, pooled_sample_embeddings)
+            # The zerot-th label, where positive sample locates, is set to 0.
+            labels = torch.zeros(query_samples_similarity.shape[0], dtype=torch.long,
+                                device=query_samples_similarity.device)
+            loss = F.cross_entropy(query_samples_similarity, labels)
+        return loss
 
     def batch_forward(self, batch):
         """The common forward function for both training and inference."""
@@ -114,13 +178,10 @@ class LitSentenceEncoder(pl.LightningModule):
         embeddings = outputs.last_hidden_state.view(batch_size, n_samples, seq_len, -1)
         query_embedding = embeddings[:, 0:1]  # [batch_size, 1, seq_len, embedding_dim]
         samples_embedding = embeddings[:, 1:]  # [batch_size, 1 + neg, seq_len, embedding_dim]
-        # similarity: [batch_size, 1 + neg]
-        query_samples_similarity = self.compute_sentence_similarity(query_embedding, samples_embedding,
-            query_mask=batch['attention_mask'][:, 0:1], target_mask=batch['attention_mask'][:, 1:])
-        # The zerot-th label, where positive sample locates, is set to 0.
-        labels = torch.zeros(query_samples_similarity.shape[0], dtype=torch.long,
-                             device=query_samples_similarity.device)
-        loss = self.loss_fn(query_samples_similarity, labels)
+        pooled_query_embedding, pooled_sample_embeddings = self.pool_sentence_embedding(
+            query_embedding, samples_embedding,
+            batch['attention_mask'][:, 0:1], batch['attention_mask'][:, 1:])
+        loss = self.compute_loss(pooled_query_embedding, pooled_sample_embeddings)
         return loss
 
     def training_step(self, batch, batch_idx):
