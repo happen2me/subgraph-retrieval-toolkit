@@ -84,6 +84,7 @@ class DBpedia(KnowledgeGraphBase):
             str: the bracket-escaped entity identifier
         """
         # entity = entity.replace('(', r'\(').replace(')', r'\)')
+        entity = entity.replace('"', r'\"')
         entity = f"<http://dbpedia.org/resource/{entity}>"
         return entity
 

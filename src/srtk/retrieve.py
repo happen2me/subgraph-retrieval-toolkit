@@ -114,7 +114,7 @@ class KnowledgeGraphTraverser:
             str: the label of the entity or the relation
         """
         # For freebase, the relation identifier contains enough information
-        if self.kg.name == 'freebase':
+        if self.kg.name == 'freebase' or self.kg.name == 'dbpedia':
             return identifier
         if identifier == END_REL:
             return END_REL

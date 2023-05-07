@@ -144,6 +144,8 @@ def convert_records_relation_id_to_lable(records, kg):
 
     @lru_cache
     def get_label(rel):
+        if kg.name == 'dbpedia' or kg.name == 'freebase':
+            return rel
         if rel == END_REL:
             return END_REL
         return kg.get_relation_label(rel) or rel
