@@ -47,7 +47,7 @@ For training a retriever:
 
 Use `srtk [subcommand] --help` to see the detailed usage of each subcommand.
 
-## Walkthrough
+## A Tour of SRTK
 
 ### Retrieve Subgraphs
 
@@ -122,6 +122,16 @@ srtk train --data-file data/train.jsonl \
     --model-name-or-path intfloat/e5-small \
     --save-model-path artifacts/scorer
 ```
+
+## Trained models
+
+SRTK is compatible with any language encoder or encoder-decoder models from [huggingface hub](https://huggingface.co/models). You only need to specify the model name or path for arguments like `--model-name-or-path` or `--scorer-model-path`.
+
+Here we provide some trained models for subgraph retrieval.
+
+| Model | Dataset | Base Model | Notes |
+| --- | --- | --- | --- |
+| [`drt/srtk-scorer`](https://huggingface.co/drt/srtk-scorer) | [WebQSP](https://www.microsoft.com/en-us/download/details.aspx?id=52763), [SimpleQuestionsWikidata](https://github.com/askplatypus/wikidata-simplequestions), [SimpleDBpediaQA](https://github.com/castorini/SimpleDBpediaQA) | `roberta-base` | Jointly trained for Wikidata, Freebase and DBpedia. |
 
 ## Tutorials
 
