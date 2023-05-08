@@ -5,8 +5,9 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
+   srtk.entity_linking
    srtk.knowledge_graph
    srtk.preprocessing
    srtk.scorer

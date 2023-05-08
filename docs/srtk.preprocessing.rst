@@ -18,10 +18,10 @@ srtk.preprocessing.merge\_ground module
    :undoc-members:
    :show-inheritance:
 
-srtk.preprocessing.negative\_sampling module
---------------------------------------------
+srtk.preprocessing.search\_path module
+--------------------------------------
 
-.. automodule:: srtk.preprocessing.negative_sampling
+.. automodule:: srtk.preprocessing.search_path
    :members:
    :undoc-members:
    :show-inheritance:
@@ -34,10 +34,10 @@ srtk.preprocessing.score\_path module
    :undoc-members:
    :show-inheritance:
 
-srtk.preprocessing.search\_path module
---------------------------------------
+srtk.preprocessing.negative\_sampling module
+--------------------------------------------
 
-.. automodule:: srtk.preprocessing.search_path
+.. automodule:: srtk.preprocessing.negative_sampling
    :members:
    :undoc-members:
    :show-inheritance:
