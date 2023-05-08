@@ -1,8 +1,6 @@
 srtk.scorer package
 ===================
 
-Submodules
-----------
 
 srtk.scorer.encoder module
 --------------------------
@@ -16,14 +14,6 @@ srtk.scorer.scorer module
 -------------------------
 
 .. automodule:: srtk.scorer.scorer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: srtk.scorer
    :members:
    :undoc-members:
    :show-inheritance:

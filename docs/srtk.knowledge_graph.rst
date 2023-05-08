@@ -1,8 +1,6 @@
 srtk.knowledge\_graph package
 =============================
 
-Submodules
-----------
 
 srtk.knowledge\_graph.freebase module
 -------------------------------------
@@ -28,10 +26,3 @@ srtk.knowledge\_graph.wikidata module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: srtk.knowledge_graph
-   :members:
-   :undoc-members:
-   :show-inheritance:

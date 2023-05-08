@@ -317,7 +317,7 @@ def _add_arguments(parser):
     parser.add_argument('-o', '--output', type=str, required=True, help='output file path for storing retrieved triplets.')
     parser.add_argument('-e', '--sparql-endpoint', type=str, help='SPARQL endpoint for Wikidata or Freebase services.')
     parser.add_argument('-kg', '--knowledge-graph', type=str, required=True, choices=('freebase', 'wikidata', 'dbpedia'),
-                        help='choose the knowledge graph: currently supports ``freebase`` and ``wikidata``.')
+                        help='choose the knowledge graph: currently supports ``freebase``, ``wikidata`` and ``dbpedia``.')
     parser.add_argument('-m', '--scorer-model-path', type=str, required=True, help='Path to the scorer model, containing \
                         both the saved model and its tokenizer in the Huggingface models format.\
                         Such a model is saved automatically when using the ``srtk train`` command.\

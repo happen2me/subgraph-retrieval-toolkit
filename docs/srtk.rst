@@ -11,8 +11,6 @@ Subpackages
    srtk.preprocessing
    srtk.scorer
 
-Submodules
-----------
 
 srtk.link\_wikidata module
 --------------------------
@@ -44,10 +42,4 @@ srtk.visualize module
 ---------------------
 
 .. automodule:: srtk.visualize
-   :members:
-
-Module contents
----------------
-
-.. automodule:: srtk
    :members:

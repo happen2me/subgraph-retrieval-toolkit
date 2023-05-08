@@ -1,8 +1,6 @@
 srtk.preprocessing package
 ==========================
 
-Submodules
-----------
 
 srtk.preprocessing.load\_dataset module
 ---------------------------------------
@@ -40,14 +38,6 @@ srtk.preprocessing.search\_path module
 --------------------------------------
 
 .. automodule:: srtk.preprocessing.search_path
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: srtk.preprocessing
    :members:
    :undoc-members:
    :show-inheritance:
