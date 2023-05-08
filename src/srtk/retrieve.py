@@ -285,6 +285,7 @@ def retrieve(args):
     """
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
     kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint,
+                             prepend_prefixes=not args.omit_prefixes,
                              exclude_qualifiers=not args.include_qualifiers)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     scorer = Scorer(args.scorer_model_path, device)
@@ -333,6 +334,9 @@ def _add_arguments(parser):
     parser.add_argument('--include-qualifiers', action='store_true', help='Include qualifiers from the retrieved triplets. \
                         Qualifiers are informations represented in non-entity form, like date, count etc.\
                         This is only relevant for Wikidata.')
+    parser.add_argument('--omit-prefixes', action='store_true', help='Whether to omit prefixes when passing SPARQLs \
+                        to the endpoints. This can potentially save some bandwidth, but may cause errors when the \
+                        prefixes are not defined in the endpoint.')
 
 
 if __name__ == '__main__':
