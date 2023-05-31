@@ -1,7 +1,7 @@
 # SRTK: Subgraph Retrieval Toolkit
 
-[![PyPi](https://img.shields.io/pypi/v/srtk)](https://pypi.org/project/srtk/)
-[![Documentation Status](https://readthedocs.org/projects/srtk/badge/?version=latest)](https://srtk.readthedocs.io/en/latest/?badge=latest)
+[![PyPi](https://img.shields.io/pypi/v/srtk?logo=python&logoColor=white&color=blue)](https://pypi.org/project/srtk/)
+[![Documentation Status](https://img.shields.io/readthedocs/srtk?logo=readthedocs&logoColor=white)](https://srtk.readthedocs.io/en/latest/?badge=latest)
 [![PytestStatus](https://github.com/happen2me/subgraph-retrieval-wikidata/actions/workflows/pytest.yml/badge.svg)](https://github.com/happen2me/subgraph-retrieval-toolkit/actions/workflows/pytest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/622648166.svg)](https://zenodo.org/badge/latestdoi/622648166)
