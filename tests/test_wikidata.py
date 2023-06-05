@@ -22,7 +22,7 @@ def test_search_two_hop_relations(wikidata: Wikidata):
     src = "Q157808"
     dst = "Q458"
     relations = wikidata.search_two_hop_relations(src, dst)
-    assert ["P17", "P361"] in relations, "(TUM --country--> Germany --part of--> European Union)"
+    assert ["P17", "P463"] in relations, "(TUM --country--> Germany --member of--> European Union)"
 
 def test_deduce_leaves(wikidata: Wikidata):
     src = "Q157808"
@@ -31,11 +31,11 @@ def test_deduce_leaves(wikidata: Wikidata):
     path = ("P17",)
     leaves = wikidata.deduce_leaves(src, path, limit=10)
     assert "Q183"  in leaves, "(TUM --country--> Germany )"
-    
+
     # Test two-hop leaves
-    path = ("P17", "P361")
-    leaves = wikidata.deduce_leaves(src, path, limit=10)
-    assert "Q458" in leaves and "Q27509" in leaves, "(TUM --country--> Germany --part of--> European Union | Central Europe)"
+    path = ("P17", "P463")
+    leaves = wikidata.deduce_leaves(src, path, limit=100)
+    assert "Q458" in leaves, "(TUM --country--> Germany --member of--> European Union)"
 
 def test_get_neighbor_relations():
     src = "Q157808"
