@@ -258,13 +258,40 @@ def calculate_hit_and_miss(retrieved_path):
     return hit, miss
 
 
+def calculate_subgraph_size(retrieved_path):
+    """Calculate the average number of triplets, entities and relations in retrieved subgraphs.
+
+    Args:
+        retrieved_path (str): path to the retrieved triplets
+
+    Returns:
+        tuple: average number of triplets, entities and relations in retrieved subgraphs
+    """
+    retrieval = srsly.read_jsonl(retrieved_path)
+    n_triplets = []
+    n_entities = []
+    n_relations = []
+    for sample in retrieval:
+        entities = set().union(*((triplet[0], triplet[-1]) for triplet in sample['triplets']))
+        relations = set().union(*((triplet[1],) for triplet in sample['triplets']))
+        n_triplets.append(len(sample['triplets']))
+        n_entities.append(len(entities))
+        n_relations.append(len(relations))
+    avg_n_triplets = sum(n_triplets) / len(n_triplets) if len(n_triplets) > 0 else 0
+    avg_n_entities = sum(n_entities) / len(n_entities) if len(n_entities) > 0 else 0
+    avg_n_relations = sum(n_relations) / len(n_relations) if len(n_relations) > 0 else 0
+    return avg_n_triplets, avg_n_entities, avg_n_relations
+
+
 def print_and_save_recall(retrieved_path):
     """Calculate and print the recall of answer entities in retrieved triplets,
     If any answer from the answer entities is in the retrieved entities, the sample
     counts as a hit.
     """
     hit, miss = calculate_hit_and_miss(retrieved_path)
+    avg_triplets, avg_entities, avg_relations = calculate_subgraph_size(retrieved_path)
     print(f"Answer coverage rate: {hit / (hit + miss)} ({hit} / {hit + miss})")
+    print(f"Average number of triplets: {avg_triplets}, entities: {avg_entities}, relations: {avg_relations}")
     info = {}
     if hit + miss != 0:
         info = {
