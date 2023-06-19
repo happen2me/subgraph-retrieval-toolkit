@@ -18,7 +18,7 @@ class DBpediaLinker(LinkerBase):
         """
         self.endpoint = endpoint
 
-    def annotate(self, text):
+    def annotate(self, text, **kwargs):
         """Annotate a text with the entities in the DBpedia knowledge graph
 
         Args:

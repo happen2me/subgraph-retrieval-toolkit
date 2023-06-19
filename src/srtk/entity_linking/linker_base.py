@@ -5,7 +5,7 @@ class LinkerBase:
     """Base class for entity linking"""
 
     @abstractmethod
-    def annotate(self, text: str):
+    def annotate(self, text: str, **kwargs):
         """Annotate a text with the entities in the knowledge graph
 
         The returned dictionary should at least have the following fields:
@@ -14,6 +14,7 @@ class LinkerBase:
 
         Args:
             text (str): The text to annotate
+            kwargs: Extra arguments
 
         Returns:
             dictionary: The annotated text with linked entities

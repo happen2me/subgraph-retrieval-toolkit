@@ -18,12 +18,15 @@ def link(args):
         raise RuntimeError(f"Can't reach the endpoint {args.el_endpoint}")
 
     if args.knowledge_graph == 'wikidata':
-        linker = WikidataLinker(args.el_endpoint, args.wikimapper_db)
+        linker = WikidataLinker(args.el_endpoint, args.wikimapper_db, service=args.service)
     elif args.knowledge_graph == 'dbpedia':
         linker = DBpediaLinker(args.el_endpoint)
     else:
         raise NotImplementedError(f"Knowledge graph {args.knowledge_graph} not implemented")
 
+    extra_kwargs = {}
+    if args.token:
+        extra_kwargs['token'] = args.token
     with open(args.input, 'r', encoding='utf-8') as f:
         total_lines = len(f.readlines())
     questions = srsly.read_jsonl(args.input)
@@ -31,7 +34,7 @@ def link(args):
     cnt_id_found = 0
     all_linked = []
     for question in tqdm(questions, total=total_lines, desc=f"Entity linking {args.input}"):
-        linked = linker.annotate(question[args.ground_on])
+        linked = linker.annotate(question[args.ground_on], **extra_kwargs)
         cnt_id_found += len(linked["question_entities"])
         if 'not_converted_entities' in linked:
             cnt_id_not_found += len(linked['not_converted_entities'])
@@ -64,7 +67,8 @@ def _add_arguments(parser):
                         help='Knowledge graph to link to, only wikidata is supported now')
     parser.add_argument('--wikimapper-db', type=str, default='resources/wikimapper/index_enwiki.db', help='Wikimapper database path')
     parser.add_argument('--ground-on', type=str, default='question', help='The key to ground on, the corresponding text will be sent to the REL endpoint for entity linking')
-
+    parser.add_argument('--service', type=str, choices=['tagme', 'wat', 'rel'], help='Entity linking service to use. Currently only tagme, wat, rel are supported.')
+    parser.add_argument('--token', type=str, default=None, help='Token for the entity linking endpoint')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
