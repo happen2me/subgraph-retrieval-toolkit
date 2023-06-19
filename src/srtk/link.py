@@ -66,8 +66,10 @@ def _add_arguments(parser):
     parser.add_argument('-kg', '--knowledge-graph', type=str, default='wikidata', choices=['wikidata', 'dbpedia'],
                         help='Knowledge graph to link to, only wikidata is supported now')
     parser.add_argument('--wikimapper-db', type=str, default='resources/wikimapper/index_enwiki.db', help='Wikimapper database path')
-    parser.add_argument('--ground-on', type=str, default='question', help='The key to ground on, the corresponding text will be sent to the REL endpoint for entity linking')
-    parser.add_argument('--service', type=str, choices=['tagme', 'wat', 'rel'], help='Entity linking service to use. Currently only tagme, wat, rel are supported.')
+    parser.add_argument('--ground-on', type=str, default='question',
+                        help='The key to ground on, the corresponding text will be sent to the REL endpoint for entity linking')
+    parser.add_argument('--service', type=str, choices=['tagme', 'wat', 'rel', 'spotlight'],
+                        help='Entity linking service to use. Currently only tagme, wat, rel, spotlight are supported.')
     parser.add_argument('--token', type=str, default=None, help='Token for the entity linking endpoint')
 
 if __name__ == '__main__':
