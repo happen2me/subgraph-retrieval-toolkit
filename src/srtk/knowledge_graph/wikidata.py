@@ -15,6 +15,7 @@ class Wikidata(KnowledgeGraphBase):
         PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX bd: <http://www.bigdata.com/rdf#>
+        PREFIX schema: <http://schema.org/>
         """
     ENTITY_PREFIX: str = "http://www.wikidata.org/entity/Q"
 
@@ -282,3 +283,32 @@ class Wikidata(KnowledgeGraphBase):
             return None
         label = label[0]['label']['value']
         return label
+
+    def get_description(self, identifier):
+        """Get description of an entity or a relation. If no description is found, return None.
+
+        Args:
+            identifier (str): entity or relation, a QID or a PID
+
+        Returns:
+            str | None: description of the entity or relation
+        """
+        if not self.is_qid(identifier) and not self.is_pid(identifier):
+            return identifier
+
+        query = f"""
+            SELECT ?description
+                WHERE {{
+                    wd:{identifier} schema:description ?description .
+                    FILTER(LANG(?description) = "en")
+                    }}
+                LIMIT 1
+            """
+        if self.prepend_prefixes:
+            query = self.PREFIXES + query
+        description = self.queryWikidata(query)
+        if len(description) == 0:
+            print(f'No description for identifier {identifier}.')
+            return None
+        description = description[0]['description']['value']
+        return description
