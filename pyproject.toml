@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "srtk"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
   { name="Yuanchun Shen", email="y.c.shen@tum.de" },
 ]

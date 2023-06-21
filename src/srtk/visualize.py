@@ -14,6 +14,17 @@ from bs4 import BeautifulSoup as Soup
 from .knowledge_graph import KnowledgeGraphBase, get_knowledge_graph
 
 
+__DESCRIPTION__ = """Visualize the graph (represented as a set of triplets) using pyvis.
+It expects the input to be a JSONL file, where each line contains fields id, triplets, 
+question, answer, question_entities, answer_entities. Their meanings are as follows:
+- id: the id of the sample. the output will be named as [id].html
+- triplets (list[list[str]]): a list of triplets, where each triplet is a list of three strings: subject, relation, object
+- question (str): the question. it will be shown in backgraound
+- answer (str, optional): the answer. it will be shown in backgraound
+- question_entities (list[str], optional): a list of entity identifiers. they will be highlighted in blue.
+- answer_entities (list[str], optional): a list of entity identifiers. they will be highlighted in green.
+"""
+
 def visualize_subgraph(sample, kg: KnowledgeGraphBase):
     """Visualize the subgraph. It returns an html string.
     """
@@ -97,7 +108,7 @@ def visualize(args):
 
 
 def _add_arguments(parser):
-    parser.description = 'Visualize the graph (represented as a set of triplets) using pyvis.'
+    parser.description = __DESCRIPTION__
     parser.add_argument('-i', '--input', required=True, help='The input subgraph file path.')
     parser.add_argument('-o', '--output-dir', required=True, help='The output directory path.')
     parser.add_argument('-e', '--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
