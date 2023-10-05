@@ -181,7 +181,7 @@ class DBpedia(KnowledgeGraphBase):
             query = f"""
                 SELECT DISTINCT ?r
                 WHERE {{
-                    dbr:Charles_III ?r ?neighbor .
+                    dbr:{src} ?r ?neighbor .
                     FILTER (STRSTARTS(STR(?r), "http://dbpedia.org/ontology/") && !STRSTARTS(STR(?r), "http://dbpedia.org/ontology/wiki"))
                 }}
                 LIMIT {limit}
