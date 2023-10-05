@@ -88,13 +88,13 @@ class DBpedia(KnowledgeGraphBase):
         entity = f"<http://dbpedia.org/resource/{entity}>"
         return entity
 
-    def deduce_leaves(self, src: str, path: List[str], limit: int) -> List[str]:
+    def deduce_leaves(self, src: str, path: List[str], limit: int = 2000) -> List[str]:
         """Deduce leave entities from source entity following the path.
 
         Args:
             src_entity (str): source entity
             path (tuple[str]): path from source entity to destination entity
-            limit (int, optional): limit of the number of leaves.
+            limit (int, optional): limit of the number of leaves. Defaults to 2000.
 
         Returns:
             list[str]: list of leaves. Each leaf is a ID.
@@ -181,7 +181,7 @@ class DBpedia(KnowledgeGraphBase):
             query = f"""
                 SELECT DISTINCT ?r
                 WHERE {{
-                    dbr:Charles_III ?r ?neighbor .
+                    dbr:{src} ?r ?neighbor .
                     FILTER (STRSTARTS(STR(?r), "http://dbpedia.org/ontology/") && !STRSTARTS(STR(?r), "http://dbpedia.org/ontology/wiki"))
                 }}
                 LIMIT {limit}

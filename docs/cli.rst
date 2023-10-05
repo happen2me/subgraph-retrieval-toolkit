@@ -29,7 +29,7 @@ Options:
                         The directory to save intermediate files. If not specified, the intermediate files will be saved in the
                         same directory as the output file, with the name paths.jsonl and scores.jsonl
   -e SPARQL_ENDPOINT, --sparql-endpoint SPARQL_ENDPOINT
-                        SPARQL endpoint URL for either Wikidata or Freebase (e.g., 'http://localhost:1234/api/endpoint/sparql' for
+                        SPARQL endpoint URL for either Wikidata, Freebase or DBpedia (e.g., 'http://localhost:1234/api/endpoint/sparql' for
                         default local qEndpoint)
   -kg {wikidata,freebase,dbpedia}, --knowledge-graph {wikidata,freebase,dbpedia}
                         knowledge graph name, either wikidata or freebase
@@ -156,7 +156,7 @@ Options:
   -o OUTPUT, --output OUTPUT
                         output file path for storing retrieved triplets.
   -e SPARQL_ENDPOINT, --sparql-endpoint SPARQL_ENDPOINT
-                        SPARQL endpoint for Wikidata or Freebase services.
+                        SPARQL endpoint for Wikidata, Freebase or DBpedia services.
   -kg {freebase,wikidata,dbpedia}, --knowledge-graph {freebase,wikidata,dbpedia}
                         choose the knowledge graph: currently supports ``freebase``, ``wikidata`` and ``dbpedia``.
   -m SCORER_MODEL_PATH, --scorer-model-path SCORER_MODEL_PATH
