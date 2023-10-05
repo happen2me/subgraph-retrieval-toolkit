@@ -54,7 +54,7 @@ Use `srtk [subcommand] --help` to see the detailed usage of each subcommand.
 #### Retrieve subgraphs with a trained scorer
 
 ```bash
-srtk retrieve [-h] -i INPUT -o OUTPUT [-e SPARQL_ENDPOINT] -kg {freebase,wikidata}
+srtk retrieve [-h] -i INPUT -o OUTPUT [-e SPARQL_ENDPOINT] -kg {freebase,wikidata,dbpedia}
               -m SCORER_MODEL_PATH [--beam-width BEAM_WIDTH] [--max-depth MAX_DEPTH]
               [--evaluate] [--include-qualifiers]
 ```
