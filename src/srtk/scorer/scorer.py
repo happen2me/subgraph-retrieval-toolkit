@@ -49,6 +49,7 @@ class Scorer:
     @lru_cache
     def batch_score(self, question, prev_relations, next_relations):
         """Score next relations in batch.
+        Warning: the max length of the input to the scorer model is hardcoded to 512
 
         Args:
             question (str): question
@@ -62,7 +63,8 @@ class Scorer:
         query = f"query: {question} [SEP] {' # '.join(prev_relations)}"
         next_relations = ['relation: ' + next_relation for next_relation in next_relations]
         text_pair = [query] + next_relations
-        inputs = self.tokenizer(text_pair, return_tensors='pt', padding=True)
+        inputs = self.tokenizer(text_pair, return_tensors='pt', padding=True,
+                                max_length=512, truncation=True)
         inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
         with torch.no_grad():
             outputs = self.model(**inputs, return_dict=True)
