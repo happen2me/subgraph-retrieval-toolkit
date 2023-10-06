@@ -32,7 +32,14 @@ def link(args):
     questions = srsly.read_jsonl(args.input)
     cnt_id_not_found = 0
     cnt_id_found = 0
-    all_linked = []
+    # Check whether the folder exists
+    folder_path = Path(args.output).parent
+    if not folder_path.exists():
+        folder_path.mkdir(parents=True)
+        print(f"Folder {folder_path} created")
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    # Write an empty file first
+    srsly.write_jsonl(args.output, [])
     for question in tqdm(questions, total=total_lines, desc=f"Entity linking {args.input}"):
         linked = linker.annotate(question[args.ground_on], **extra_kwargs)
         cnt_id_found += len(linked["question_entities"])
@@ -40,16 +47,10 @@ def link(args):
             cnt_id_not_found += len(linked['not_converted_entities'])
         if 'id' in question:
             linked['id'] = question['id']
-        all_linked.append(linked)
+        # Write entity linking result in real-time
+        srsly.write_jsonl(args.output, [linked], append=True, append_new_line=False)
     if cnt_id_not_found > 0:
         print(f"{cnt_id_not_found} / {cnt_id_found + cnt_id_not_found} grounded entities not converted to ids")
-    # check whether the folder exists
-    folder_path = Path(args.output).parent
-    if not folder_path.exists():
-        folder_path.mkdir(parents=True)
-        print(f"Folder {folder_path} created")
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    srsly.write_jsonl(args.output, all_linked)
     print(f"Entity linking result saved to {args.output}")
 
 

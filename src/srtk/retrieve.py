@@ -310,7 +310,10 @@ def retrieve(args):
     Args:
         args (Namespace): arguments for subgraph retrieval
     """
+    # Write empty file first to avoid file not found error (Fail-fast)
     pathlib.Path(os.path.dirname(args.output)).mkdir(parents=True, exist_ok=True)
+    srsly.write_jsonl(args.output, [])
+
     kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint,
                              prepend_prefixes=not args.omit_prefixes,
                              exclude_qualifiers=not args.include_qualifiers)
@@ -322,7 +325,8 @@ def retrieve(args):
     for sample in tqdm(samples, desc='Retrieving subgraphs', total=total):
         triplets = retriever.retrieve_subgraph_triplets(sample)
         sample['triplets'] = triplets
-    srsly.write_jsonl(args.output, samples)
+        # Write the retrieval result in real-time
+        srsly.write_jsonl(args.output, [sample], append=True, append_new_line=False)
     print(f'Retrieved subgraphs saved to to {args.output}')
     if args.evaluate:
         print_and_save_recall(args.output)
