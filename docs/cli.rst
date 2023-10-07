@@ -38,7 +38,7 @@ Options:
                         False)
   --metric {jaccard,recall}
                         The metric used to score the paths. recall will usually result in a lager size of training dataset.
-                        (default: jaccard))
+                        (default: jaccard)
   --num-negative NUM_NEGATIVE
                         The number of negative relations to sample for each positive relation. (default: 15)
   --positive-threshold POSITIVE_THRESHOLD

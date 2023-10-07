@@ -7,7 +7,7 @@ negative instances to optimize the probability of the observed ones.
 e.g.
 python preprocess/negative_sampling.py \
     --scored-path-file data/preprocess/paths_scored.jsonl \
-    --output-file data/preprocess/train_.jsonl\
+    --output-file data/preprocess/train.jsonl\
     --positive-threshold 0.3
 """
 import os
