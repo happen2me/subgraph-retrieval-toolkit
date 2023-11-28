@@ -44,18 +44,21 @@ def preprocess(args):
                                     knowledge_graph=args.knowledge_graph,
                                     ground_path=args.input,
                                     output_path=paths_file,
-                                    remove_sample_without_path=True)
+                                    remove_sample_without_path=True,
+                                    omit_prefixes=args.omit_prefixes,)
         score_path_args = Namespace(sparql_endpoint=args.sparql_endpoint,
                                     knowledge_graph=args.knowledge_graph,
                                     paths_file=paths_file,
                                     output_path=scores_file,
-                                    metric=args.metric,)
+                                    metric=args.metric,
+                                    omit_prefixes=args.omit_prefixes,)
         negative_sampling_args = Namespace(sparql_endpoint=args.sparql_endpoint,
                                            knowledge_graph=args.knowledge_graph,
                                            scored_path_file=scores_file,
                                            num_negative=args.num_negative,
                                            positive_threshold=args.positive_threshold,
-                                           output_path=output_path,)
+                                           output_path=output_path,
+                                           omit_prefixes=args.omit_prefixes,)
         search_path(search_path_args)
         score_path(score_path_args)
     else:
@@ -64,7 +67,8 @@ def preprocess(args):
                                            scored_path_file=args.input,
                                            num_negative=args.num_negative,
                                            positive_threshold=args.positive_threshold,
-                                           output_path=output_path,)
+                                           output_path=output_path,
+                                           omit_prefixes=args.omit_prefixes,)
     negative_sampling(negative_sampling_args)
 
 
@@ -93,6 +97,9 @@ def _add_arguments(parser):
     parser.add_argument('--positive-threshold', type=float, default=0.5,
                         help='The threshold to determine whether a path is positive or negative. If you want to use \
                         a larger training dataset, you can set this value to a smaller value. (default: 0.5)')
+    parser.add_argument('--omit-prefixes', action='store_true', help='Whether to omit prefixes when passing SPARQLs \
+                        to the endpoints. This can potentially save some bandwidth, but may cause errors when the \
+                        prefixes are not defined in the endpoint.')
 
 
 if __name__ == '__main__':

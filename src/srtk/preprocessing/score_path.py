@@ -53,7 +53,7 @@ def score_path(kg: KnowledgeGraphBase, src, path, answers, metric='jaccard'):
 
 
 def main(args):
-    kg = get_knowledge_graph(args.knowledge_graph_type, args.sparql_endpoint,prepend_prefixes=True)
+    kg = get_knowledge_graph(args.knowledge_graph_type, args.sparql_endpoint, prepend_prefixes=not args.omit_prefixes)
     samples = srsly.read_jsonl(args.paths_file)
     total_lines = sum(1 for _ in srsly.read_jsonl(args.paths_file))
     processed_samples = []  # adds path_scores to each sample

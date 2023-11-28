@@ -182,7 +182,7 @@ def create_jsonl_dataset(records):
 
 
 def main(args):
-    kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint,prepend_prefixes=True)
+    kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint, prepend_prefixes=not args.omit_prefixes)
     positive_threshold = args.positive_threshold
     # Each sample has the following fields:
     # - id: sample id
