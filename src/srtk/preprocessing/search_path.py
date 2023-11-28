@@ -51,7 +51,7 @@ def main(args):
     # - answer_entities: list of answer entities
     ground_samples = srsly.read_jsonl(args.ground_path)
     total_samples = sum(1 for _ in srsly.read_jsonl(args.ground_path))
-    kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint)
+    kg = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint,prepend_prefixes=True)
     processed_samples = []
     skipped = 0
     for sample in tqdm(ground_samples, total=total_samples, desc='Searching paths'):
