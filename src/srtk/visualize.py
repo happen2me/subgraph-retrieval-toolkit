@@ -25,22 +25,26 @@ question, answer, question_entities, answer_entities. Their meanings are as foll
 - answer_entities (list[str], optional): a list of entity identifiers. they will be highlighted in green.
 """
 
+
 def visualize_subgraph(sample, kg: KnowledgeGraphBase):
     """Visualize the subgraph. It returns an html string.
     """
     net = Network(directed=True, font_color='#000000')
     net.barnes_hut()
-    question_entities = sample['question_entities'] if 'question_entities' in sample else []
-    answer_entities = sample['answer_entities'] if 'answer_entities' in sample else []
+    question_entities = sample['question_entities'] if 'question_entities' in sample else [
+    ]
+    answer_entities = sample['answer_entities'] if 'answer_entities' in sample else [
+    ]
     # Add question entities even if they are not in the triplets
     for entity in question_entities:
         net.add_node(entity, label=kg.get_label(entity), color='#114B7A')
     for triplet in sample['triplets']:
         subject, relation, obj = triplet
         subject_label = kg.get_label(subject)
-        subject_options = {'color':'#114B7A'} if subject in question_entities else {}
+        subject_options = {
+            'color': '#114B7A'} if subject in question_entities else {}
         obj_label = kg.get_label(obj)
-        obj_options = {'color':'#1B5E20'} if obj in answer_entities else {}
+        obj_options = {'color': '#1B5E20'} if obj in answer_entities else {}
         relation_label = kg.get_label(relation)
         net.add_node(subject, label=subject_label, **subject_options)
         net.add_node(obj, label=obj_label, **obj_options)
@@ -74,11 +78,12 @@ def add_text_to_html(html, text):
         }
     '''
     soup.head.append(style_tag)
-    p_tag = soup.new_tag('p', attrs={'class': 'background-text'}, style="white-space:pre-wrap")
+    p_tag = soup.new_tag(
+        'p', attrs={'class': 'background-text'}, style="white-space:pre-wrap")
     p_tag.string = text
     soup.body.append(p_tag)
     return soup.prettify()
-    
+
 
 def visualize(args):
     """Main entry for subgraph visualization.
@@ -86,7 +91,8 @@ def visualize(args):
     Args:
         args (Namespace): arguments for subgraph visualization.
     """
-    knowledge_graph = get_knowledge_graph(args.knowledge_graph, args.sparql_endpoint)
+    knowledge_graph = get_knowledge_graph(
+        args.knowledge_graph, args.sparql_endpoint)
     samples = srsly.read_jsonl(args.input)
     total = sum(1 for _ in srsly.read_jsonl(args.input))
     total = min(total, args.max_output)
@@ -101,7 +107,8 @@ def visualize(args):
         if 'answer' in sample:
             text_to_append += f"\n    Answer: {sample['answer']}"
         html = add_text_to_html(html, text_to_append)
-        output_path = os.path.join(args.output_dir, sample['id'] + '.html')
+        output_path = os.path.join(
+            args.output_dir, sample['question_entities'] + '.html')
         with open(output_path, 'w', encoding='utf-8') as fout:
             fout.write(html)
     print(f'Visualized graphs outputted to {args.output_dir}.')
@@ -109,8 +116,10 @@ def visualize(args):
 
 def _add_arguments(parser):
     parser.description = __DESCRIPTION__
-    parser.add_argument('-i', '--input', required=True, help='The input subgraph file path.')
-    parser.add_argument('-o', '--output-dir', required=True, help='The output directory path.')
+    parser.add_argument('-i', '--input', required=True,
+                        help='The input subgraph file path.')
+    parser.add_argument('-o', '--output-dir', required=True,
+                        help='The output directory path.')
     parser.add_argument('-e', '--sparql-endpoint', type=str, default='http://localhost:1234/api/endpoint/sparql',
                         help='SPARQL endpoint for Wikidata or Freebase services. In this step, it is used to get the labels of entities.\
                         (Default: http://localhost:1234/api/endpoint/sparql)')
