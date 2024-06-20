@@ -141,6 +141,24 @@ Here we provide some trained models for subgraph retrieval.
 - [Supervised Training with Wikidata Simple Questions](https://github.com/happen2me/subgraph-retrieval-toolkit/blob/main/tutorials/5.supervised_train_wikidata.ipynb)
 - [Extend SRTK to other Knowledge Graphs](https://github.com/happen2me/subgraph-retrieval-toolkit/blob/main/tutorials/6.extend_to_new_kg.ipynb)
 
+## Citations
+```
+@article{shen2023srtk,
+  title={SRTK: A Toolkit for Semantic-relevant Subgraph Retrieval},
+  author={Shen, Yuanchun},
+  journal={arXiv preprint arXiv:2305.04101},
+  year={2023}
+}
+
+@inproceedings{zhang2022subgraph,
+  title={Subgraph Retrieval Enhanced Model for Multi-hop Knowledge Base Question Answering},
+  author={Zhang, Jing and Zhang, Xiaokang and Yu, Jifan and Tang, Jian and Tang, Jie and Li, Cuiping and Chen, Hong},
+  booktitle={Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages={5773--5784},
+  year={2022}
+}
+```
+
 ## License
 
 This project is licensed under the terms of the MIT license.
