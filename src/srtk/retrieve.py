@@ -141,11 +141,11 @@ class Retriever:
 
         Args:
             sample (dict): a sample from the dataset, which contains at least the following fields:
-                question: a string
-                question_entities: a list of entities
+                question: the question used for subgraph retrieval with learned semantic similarity
+                question_entities: a list of entity names
 
         Returns:
-            list(tuple): a list of triplets
+            list(tuple): a list of (subject, predicate, object) triplet that form a subgraph
         """
         question = sample['question']
         triplets = []
